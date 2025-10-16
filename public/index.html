@@ -2,18 +2,45 @@
 <html lang="da">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DIS-eksamen-2025</title>
-  <link rel="stylesheet" href="style.css">
+  <title>🚀 Velkommen til DIS-eksamen-2025</title>
+  <style>
+    body {
+      background-color: #111;
+      color: #fff;
+      text-align: center;
+      font-family: Arial, sans-serif;
+      margin-top: 10%;
+    }
+    h1 { font-size: 2em; }
+    button {
+      background: #1db954;
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    button:hover {
+      background: #17a44c;
+    }
+    .ok { color: #1db954; margin-top: 20px; }
+  </style>
 </head>
 <body>
-  <div class="container">
-    <h1>🚀 Velkommen til DIS-eksamen-2025</h1>
-    <p>Du ser denne side direkte fra din DigitalOcean-droplet på <strong>http://161.35.76.75</strong></p>
-    <button id="testBtn">Klik for at teste JS</button>
-    <p id="result"></p>
-  </div>
+  <h1>🚀 Velkommen til DIS-eksamen-2025</h1>
+  <p>Du ser denne side direkte fra din DigitalOcean-droplet på 
+    <a href="http://161.35.76.75" style="color:#1db954">http://161.35.76.75</a>
+  </p>
+  <button onclick="testJS()">Klik for at teste JS</button>
+  <div id="resultat"></div>
 
-  <script src="script.js"></script>
+  <script>
+    function testJS() {
+      document.getElementById('resultat').innerHTML = '<p class="ok">✅ JavaScript virker korrekt!</p>';
+    }
+  </script>
 </body>
 </html>
+
+
