@@ -17,7 +17,7 @@ app.get("/status", (req, res) => {
   res.send(`✅ Serveren kører på port ${PORT}`);
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Serveren kører på http://161.35.76.75:${PORT}`);
 });
 
