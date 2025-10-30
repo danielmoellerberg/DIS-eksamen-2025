@@ -4,17 +4,20 @@ const app = express();
 
 const PORT = process.env.PORT || 3000;
 
-// Servér statiske filer fra "public"-mappen
+// Servér alle statiske filer (HTML, CSS, JS)
 app.use(express.static(path.join(__dirname, "public")));
 
+// Sørg for at '/' viser index.html
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
+// Til test – så du kan se hvilken instans du rammer
 app.get("/status", (req, res) => {
-  res.send(`Server kører på port ${PORT}`);
+  res.send(`✅ Serveren kører på port ${PORT}`);
 });
 
 app.listen(PORT, () => {
   console.log(`✅ Serveren kører på http://161.35.76.75:${PORT}`);
 });
+
