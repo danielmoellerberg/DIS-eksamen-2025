@@ -5,11 +5,11 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Servér alle statiske filer (HTML, CSS, JS)
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, "oplevelsesshop", "public")));
 
 // Sørg for at '/' viser index.html
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+  res.sendFile(path.join(__dirname, "oplevelsesshop","public", "index.html"));
 });
 
 // Til test – så du kan se hvilken instans du rammer
