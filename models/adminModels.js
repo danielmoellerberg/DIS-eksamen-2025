@@ -1,9 +1,9 @@
-const sql = require("mssql");
+const { poolConnect, pool, sql } = require("../config/db");
 
 // Hent alle admin-brugere
 async function getAllAdmins() {
   try {
-    const pool = await sql.connect(process.env.DB_CONNECTION);
+    await poolConnect;
     const result = await pool.request().query("SELECT * FROM Admins");
     return result.recordset;
   } catch (err) {
@@ -14,8 +14,9 @@ async function getAllAdmins() {
 // Opret en ny admin-bruger
 async function createAdmin(data) {
   try {
-    const pool = await sql.connect(process.env.DB_CONNECTION);
-    const result = await pool.request()
+    await poolConnect;
+    const result = await pool
+      .request()
       .input("username", sql.NVarChar, data.username)
       .input("password", sql.NVarChar, data.password)
       .query("INSERT INTO Admins (username, password) VALUES (@username, @password)");

@@ -1,9 +1,9 @@
-const sql = require("mssql");
+const { poolConnect, pool, sql } = require("../config/db");
 
 // Hent alle oplevelser
 async function getAllExperiences() {
   try {
-    const pool = await sql.connect(process.env.DB_CONNECTION);
+    await poolConnect;
     const result = await pool.request().query("SELECT * FROM Experiences");
     return result.recordset;
   } catch (err) {
@@ -14,8 +14,9 @@ async function getAllExperiences() {
 // Opret en ny oplevelse
 async function createExperience(data) {
   try {
-    const pool = await sql.connect(process.env.DB_CONNECTION);
-    const result = await pool.request()
+    await poolConnect;
+    const result = await pool
+      .request()
       .input("name", sql.NVarChar, data.name)
       .input("description", sql.NVarChar, data.description)
       .input("price", sql.Decimal, data.price)
