@@ -1,6 +1,37 @@
 <section class="hero">
-    <h1>Oplev nye aktiviteter</h1>
-    <p>Workshops, guidede ture og unikke oplevelser fra alle virksomheder på Understory.</p>
+    <% if (cloudinaryCloudName && cloudinaryVideoPublicId) { %>
+        <div class="hero-video">
+            <video
+                id="heroPlayer"
+                class="cld-video-player cld-fluid"
+                muted
+                autoplay
+                loop
+                playsinline
+                data-cloud-name="<%= cloudinaryCloudName %>"
+                data-public-id="<%= cloudinaryVideoPublicId %>"
+            ></video>
+        </div>
+    <% } else if (heroVideoUrl) { %>
+        <div class="hero-video">
+            <video
+                autoplay
+                muted
+                loop
+                playsinline
+                poster="<%= heroVideoPoster || '' %>"
+            >
+                <source src="<%= heroVideoUrl %>" type="video/mp4">
+                Din browser understøtter ikke videoelementet.
+            </video>
+        </div>
+    <% } %>
+
+    <div class="hero-overlay">
+        <h1>Oplev nye aktiviteter</h1>
+        <p>Workshops, guidede ture og unikke oplevelser fra alle virksomheder på Understory.</p>
+        <a class="hero-cta" href="#explore">Udforsk marketplace</a>
+    </div>
 </section>
 
 <section class="categories wrapper">
@@ -52,7 +83,7 @@
     </div>
 </section>
 
-<section class="event grid">
+<section id="explore" class="event grid">
     <% if (events && events.length > 0) { %>
         <% events.forEach(event => { %>
             <div class="event card">

@@ -93,20 +93,74 @@ body {
 /* -------------------------------------------------------------------------- */
 
 .hero {
-  padding: 80px 32px;
+  position: relative;
+  min-height: 70vh;
+  padding: 120px 32px 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
-  background: #06290f;
   color: white;
+  background: #06290f;
+  overflow: hidden;
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(6,41,15,0.15), rgba(6,41,15,0.8));
+  z-index: 0;
+}
+
+.hero-video {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.hero-video video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(65%);
+}
+
+.hero-overlay {
+  position: relative;
+  z-index: 1;
+  max-width: 720px;
 }
 
 .hero h1 {
-  font-size: 40px;
+  font-size: clamp(2.5rem, 4vw, 4rem);
   margin-bottom: 16px;
 }
 
 .hero p {
   font-size: 18px;
   opacity: 0.9;
+  margin-bottom: 32px;
+}
+
+.hero-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: #d1e751;
+  color: #06290f;
+  padding: 14px 26px;
+  border-radius: 999px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hero-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.25);
 }
 
 /* -------------------------------------------------------------------------- */

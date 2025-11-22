@@ -9,6 +9,10 @@ dotenv.config();
 
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || "0.0.0.0";
+const CLOUDINARY_VIDEO_URL = process.env.CLOUDINARY_VIDEO_URL || "";
+const CLOUDINARY_VIDEO_POSTER = process.env.CLOUDINARY_VIDEO_POSTER || "";
+const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME || "";
+const CLOUDINARY_VIDEO_PUBLIC_ID = process.env.CLOUDINARY_VIDEO_PUBLIC_ID || "";
 
 // Middleware
 app.use(cors());
@@ -22,6 +26,15 @@ app.set("layout", "layout");
 
 // Statisk indhold
 app.use(express.static(path.join(__dirname, "public")));
+
+// Globale template-variabler
+app.use((req, res, next) => {
+  res.locals.heroVideoUrl = CLOUDINARY_VIDEO_URL;
+  res.locals.heroVideoPoster = CLOUDINARY_VIDEO_POSTER;
+  res.locals.cloudinaryCloudName = CLOUDINARY_CLOUD_NAME;
+  res.locals.cloudinaryVideoPublicId = CLOUDINARY_VIDEO_PUBLIC_ID;
+  next();
+});
 
 // Dummy events til lokal visning (kan erstattes af data fra DB senere)
 const demoEvents = [

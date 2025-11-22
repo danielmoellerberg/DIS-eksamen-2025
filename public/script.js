@@ -1,5 +1,27 @@
 document.addEventListener("DOMContentLoaded", () => {
 
+  const heroPlayerEl = document.getElementById("heroPlayer");
+  if (heroPlayerEl && window.cloudinary && window.cloudinary.videoPlayer) {
+    const cloudName = heroPlayerEl.dataset.cloudName;
+    const publicId = heroPlayerEl.dataset.publicId;
+
+    if (cloudName && publicId) {
+      const player = cloudinary.videoPlayer("heroPlayer", {
+        cloud_name: cloudName,
+        controls: false,
+        autoplayMode: "always",
+        loop: true,
+        muted: true,
+        playsinline: true,
+        showLogo: false,
+      });
+
+      player.source(publicId, {
+        transformation: [{ quality: "auto", fetch_format: "auto" }],
+      });
+    }
+  }
+
   // Filtrering
   const searchInput = document.getElementById("searchInput");
   const cards = document.querySelectorAll(".event.card");
