@@ -8,6 +8,7 @@ const app = express();
 dotenv.config();
 
 const PORT = process.env.PORT || 3000;
+const HOST = process.env.HOST || "0.0.0.0";
 
 // Middleware
 app.use(cors());
@@ -113,8 +114,8 @@ app.use((req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`✅ Serveren kører på http://localhost:${PORT}`);
+app.listen(PORT, HOST, () => {
+  console.log(`✅ Serveren kører på http://${HOST}:${PORT}`);
 });
 
 
