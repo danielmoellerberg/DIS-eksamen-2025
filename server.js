@@ -1,7 +1,7 @@
 const express = require("express");
 const path = require("path");
 const dotenv = require("dotenv");
-const cors = require("cors"); // Tilføjet
+const cors = require("cors");
 
 const app = express();
 dotenv.config();
@@ -9,15 +9,19 @@ dotenv.config();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
-app.use(cors()); // Aktiverer CORS
+app.use(cors());
 app.use(express.json());
 
 // Statisk indhold
 app.use(express.static(path.join(__dirname, "public")));
 
+// View engine
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
+
 // Forside
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+  res.render("index", { title: "Understory Marketplace" });
 });
 
 // Test-endpoint
@@ -38,18 +42,12 @@ app.use("/api/notifications", notificationRoutes);
 
 // 404 fallback
 app.use((req, res) => {
-  res.status(404).json({ error: "Route ikke fundet" });
-});
-
-// Global fejl-håndtering
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: "Intern serverfejl" });
+  res.status(404).render("404", { title: "Siden blev ikke fundet" });
 });
 
 // Start server
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`✅ Serveren kører på http://161.35.76.75:${PORT}`);
+app.listen(PORT, () => {
+  console.log(`✅ Serveren kører på http://localhost:${PORT}`);
 });
 
 

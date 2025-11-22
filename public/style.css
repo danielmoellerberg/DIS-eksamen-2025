@@ -1,30 +1,421 @@
+/* Grundtema */
 body {
-  font-family: Arial, sans-serif;
-  background-color: #0d1117;
-  color: #e6edf3;
-  text-align: center;
-  margin-top: 100px;
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', sans-serif;
+  background: #f4f1e8;
+  color: #06290f;
 }
 
-.container {
-  background: #161b22;
-  display: inline-block;
-  padding: 40px 60px;
-  border-radius: 12px;
-  box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
+/* ---------------------------------------------------------------------------- */
+/* UNDERSTORY NAVIGATION – delt i to bjælker */
+/* ---------------------------------------------------------------------------- */
+
+/* Wrapper for begge bjælker */
+.nav-wrapper {
+  position: fixed;
+  top: 20px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+  gap: 20px;
+  z-index: 2000;
+  pointer-events: none; /* gør wrapper usynlig for klik */
 }
 
-button {
-  background-color: #238636;
+/* Fælles glaslook */
+.glass-nav {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+
+  padding: 5px 28px;
+  background: rgba(26, 80, 41, 0.65);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Venstre bjælke (logo + menu) */
+.left-nav {
+  margin-left: 50px; /* Dette er afstanden fra venstre kant */
+}
+
+/* Højre bjælke (login) */
+.right-nav {
+  padding: 10px 20px;
+}
+
+/* Logo */
+.nav-logo {
+  font-size: 40px;
+  font-weight: 700;
+  text-decoration: none;
+  color: #f1ff67;
+  letter-spacing: 1px;
+}
+
+/* Menu links */
+.nav-links {
+  display: flex;
+  gap: 26px;
+}
+
+.nav-links a {
   color: white;
-  border: none;
-  padding: 12px 20px;
-  border-radius: 6px;
-  cursor: pointer;
-  margin-top: 20px;
+  text-decoration: none;
+  font-size: 16px;
+  opacity: 0.95;
+}
+
+/* Login */
+.login-btn {
+  color: white;
+  text-decoration: none;
   font-size: 16px;
 }
 
-button:hover {
-  background-color: #2ea043;
+/* Mobil */
+@media (max-width: 900px) {
+  .glass-nav {
+      display: none;
+  }
+  .burger {
+      display: flex;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* HERO SEKTION */
+/* -------------------------------------------------------------------------- */
+
+.hero {
+  padding: 80px 32px;
+  text-align: center;
+  background: #06290f;
+  color: white;
+}
+
+.hero h1 {
+  font-size: 40px;
+  margin-bottom: 16px;
+}
+
+.hero p {
+  font-size: 18px;
+  opacity: 0.9;
+}
+
+/* -------------------------------------------------------------------------- */
+/* EVENT GRID OG CARDS */
+/* -------------------------------------------------------------------------- */
+
+.event.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 24px;
+  padding: 40px 32px;
+}
+
+.event.card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  cursor: pointer;
+
+  opacity: 0;
+  animation: fadeInCard 0.4s ease forwards;
+}
+
+@keyframes fadeInCard {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.event.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+}
+
+.event.image {
+  overflow: hidden;
+}
+
+.event.image img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.event.card:hover .event.image img {
+  transform: scale(1.05);
+}
+
+.event.content {
+  padding: 16px 20px;
+}
+
+.event.content h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #06290f;
+}
+
+.event.content p {
+  margin: 8px 0 12px;
+  font-size: 14px;
+  color: #444;
+}
+
+.event.rating {
+  font-size: 14px;
+  margin-bottom: 12px;
+  color: #06290f;
+}
+
+.event.button {
+  display: inline-block;
+  padding: 10px 14px;
+  font-size: 14px;
+  text-decoration: none;
+  background: #d1e751;
+  color: #06290f;
+  font-weight: 600;
+  border-radius: 8px;
+  transition: background 0.15s ease;
+}
+
+.event.button:hover {
+  background: #c4d84b;
+}
+
+.event.badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: #06290f;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+/* -------------------------------------------------------------------------- */
+/* DETAILS */
+/* -------------------------------------------------------------------------- */
+
+.details.wrapper {
+  max-width: 1100px;
+  margin: 40px auto;
+  padding: 0 24px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+}
+
+.details.image img {
+  width: 100%;
+  border-radius: 12px;
+  object-fit: cover;
+  height: 340px;
+}
+
+.details.content h1 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  font-size: 32px;
+  color: #06290f;
+}
+
+.details.description {
+  margin-bottom: 24px;
+  line-height: 1.6;
+  font-size: 16px;
+  color: #333;
+}
+
+.details.rating {
+  font-size: 18px;
+  margin-bottom: 20px;
+}
+
+.details.info p {
+  margin: 6px 0;
+  font-size: 15px;
+  color: #06290f;
+}
+
+.details.button {
+  display: inline-block;
+  margin-top: 24px;
+  padding: 14px 20px;
+  background: #d1e751;
+  color: #06290f;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 10px;
+  font-size: 16px;
+  transition: background 0.2s ease;
+}
+
+.details.button:hover {
+  background: #c4d84b;
+}
+
+@media (max-width: 800px) {
+  .details.wrapper {
+      grid-template-columns: 1fr;
+  }
+
+  .details.image img {
+      height: 260px;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* SEARCH OG FILTER */
+/* -------------------------------------------------------------------------- */
+
+.search.wrapper {
+  max-width: 1100px;
+  margin: 40px auto 20px;
+  padding: 0 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.search.input {
+  width: 100%;
+  padding: 14px 18px;
+  font-size: 16px;
+  border: 2px solid #06290f;
+  border-radius: 10px;
+  outline: none;
+  background: white;
+  margin-bottom: 20px;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+
+.search.input:focus {
+  border-color: #d1e751;
+  box-shadow: 0 0 0 3px rgba(209, 231, 81, 0.3);
+}
+
+.filter.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.chip {
+  padding: 10px 16px;
+  font-size: 14px;
+  background: white;
+  border: 2px solid #06290f;
+  border-radius: 30px;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  transform: translateY(0);
+  transition: background 0.15s ease, color 0.15s ease, border 0.15s ease, transform 0.15s ease;
+}
+
+.chip:hover {
+  background: #d1e751;
+  border-color: #d1e751;
+  color: #06290f;
+  transform: translateY(-2px);
+}
+
+.chip.active {
+  background: #06290f;
+  color: white;
+  border-color: #06290f;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+}
+
+@media (max-width: 600px) {
+  .filter.chips {
+      overflow-x: auto;
+      white-space: nowrap;
+      padding-bottom: 6px;
+      scrollbar-width: none;
+  }
+
+  .filter.chips::-webkit-scrollbar {
+      display: none;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* CATEGORIES */
+/* -------------------------------------------------------------------------- */
+
+.categories.wrapper {
+  max-width: 1100px;
+  margin: 50px auto 20px;
+  padding: 0 24px;
+}
+
+.categories.wrapper h2 {
+  font-size: 28px;
+  margin-bottom: 20px;
+  color: #06290f;
+}
+
+.categories.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 20px;
+}
+
+.category.card {
+  position: relative;
+  text-decoration: none;
+  color: white;
+  border-radius: 12px;
+  overflow: hidden;
+  height: 140px;
+  display: flex;
+  align-items: flex-end;
+  padding: 16px;
+  background: #aaa;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.category.card img {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  top: 0;
+  left: 0;
+  filter: brightness(65%);
+  transition: transform 0.3s ease;
+}
+
+.category.card span {
+  position: relative;
+  font-size: 18px;
+  font-weight: 600;
+  z-index: 2;
+}
+
+.category.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+}
+
+.category.card:hover img {
+  transform: scale(1.05);
 }
