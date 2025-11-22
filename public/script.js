@@ -1,24 +1,45 @@
 document.addEventListener("DOMContentLoaded", () => {
 
   const heroPlayerEl = document.getElementById("heroPlayer");
-  if (heroPlayerEl && window.cloudinary && window.cloudinary.videoPlayer) {
+  if (
+    heroPlayerEl &&
+    window.cloudinary &&
+    (window.cloudinary.videoPlayer || (window.cloudinary.Cloudinary && window.cloudinary.Cloudinary.new))
+  ) {
     const cloudName = heroPlayerEl.dataset.cloudName;
     const publicId = heroPlayerEl.dataset.publicId;
 
     if (cloudName && publicId) {
-      const player = cloudinary.videoPlayer("heroPlayer", {
-        cloud_name: cloudName,
-        controls: false,
-        autoplayMode: "always",
-        loop: true,
-        muted: true,
-        playsinline: true,
-        showLogo: false,
-      });
+      const createPlayer = () => {
+        if (cloudinary.videoPlayer) {
+          return cloudinary.videoPlayer("heroPlayer", {
+            cloud_name: cloudName,
+            controls: false,
+            autoplayMode: "always",
+            loop: true,
+            muted: true,
+            playsinline: true,
+            showLogo: false,
+          });
+        }
 
-      player.source(publicId, {
-        transformation: [{ quality: "auto", fetch_format: "auto" }],
-      });
+        const cldInstance = cloudinary.Cloudinary.new({ cloud_name: cloudName });
+        return cldInstance.videoPlayer("heroPlayer", {
+          controls: false,
+          autoplayMode: "always",
+          loop: true,
+          muted: true,
+          playsinline: true,
+          showLogo: false,
+        });
+      };
+
+      const player = createPlayer();
+      if (player && player.source) {
+        player.source(publicId, {
+          transformation: [{ quality: "auto", fetch_format: "auto" }],
+        });
+      }
     }
   }
 
