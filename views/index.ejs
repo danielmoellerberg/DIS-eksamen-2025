@@ -1,0 +1,87 @@
+<section class="hero">
+    <h1>Oplev nye aktiviteter</h1>
+    <p>Workshops, guidede ture og unikke oplevelser fra alle virksomheder på Understory.</p>
+</section>
+
+<section class="categories wrapper">
+    <h2>Udforsk kategorier</h2>
+
+    <div class="categories grid">
+        <a href="#" class="category card" data-category="Workshop">
+            <img src="https://images.unsplash.com/photo-1581091012184-5c1fbd1b060b" alt="Workshop">
+            <span>Workshops</span>
+        </a>
+
+        <a href="#" class="category card" data-category="Guidet tur">
+            <img src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee" alt="Guidet tur">
+            <span>Guidede ture</span>
+        </a>
+
+        <a href="#" class="category card" data-category="Natur">
+            <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e" alt="Natur">
+            <span>Natur</span>
+        </a>
+
+        <a href="#" class="category card" data-category="Mad">
+            <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836" alt="Mad">
+            <span>Madoplevelser</span>
+        </a>
+
+        <a href="#" class="category card" data-category="Kreativitet">
+            <img src="https://images.unsplash.com/photo-1529101091764-c3526daf38fe" alt="Kreativitet">
+            <span>Kreativitet</span>
+        </a>
+    </div>
+</section>
+
+<section class="search wrapper">
+    <input
+        type="text"
+        id="searchInput"
+        placeholder="Søg efter oplevelser, kategorier eller virksomheder"
+        class="search input"
+    >
+
+    <div class="filter chips">
+        <button class="chip" data-category="Workshop">Workshop</button>
+        <button class="chip" data-category="Guidet tur">Guidet tur</button>
+        <button class="chip" data-category="Natur">Natur</button>
+        <button class="chip" data-category="Mad">Mad</button>
+        <button class="chip" data-category="Kreativitet">Kreativitet</button>
+        <button class="chip" data-category="Alle">Alle</button>
+    </div>
+</section>
+
+<section class="event grid">
+    <% if (events && events.length > 0) { %>
+        <% events.forEach(event => { %>
+            <div class="event card">
+                <div class="event image">
+                    <!-- Kategori badge -->
+                    <span class="event badge">
+                        <%= event.category || "Event" %>
+                    </span>
+
+                    <img src="<%= event.image %>" alt="<%= event.title %>">
+                </div>
+
+                <div class="event content">
+                    <h3><%= event.title %></h3>
+                    <p><%= event.shortDescription %></p>
+
+                    <div class="event rating">
+                        ⭐ <%= event.rating %>
+                    </div>
+
+                    <a class="event button" href="/details/<%= event._id %>">
+                        Se detaljer
+                    </a>
+                </div>
+            </div>
+        <% }) %>
+    <% } else { %>
+        <p>Ingen events fundet.</p>
+    <% } %>
+</section>
+
+

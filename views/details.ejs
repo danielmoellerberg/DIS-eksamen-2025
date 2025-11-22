@@ -1,0 +1,50 @@
+<section class="details wrapper">
+    <div class="details image">
+        <img src="<%= event.image %>" alt="<%= event.title %>">
+    </div>
+
+    <div class="details content">
+        <h1><%= event.title %></h1>
+
+        <p class="details description">
+            <%= event.description %>
+        </p>
+
+        <div class="details rating">
+            ⭐ <%= event.rating %>
+        </div>
+
+        <div class="details info">
+            <p><strong>Lokation:</strong> <%= event.location %></p>
+            <p><strong>Dato:</strong> <%= event.date %></p>
+            <p><strong>Varighed:</strong> <%= event.duration %></p>
+            <p><strong>Pris:</strong> <%= event.price %> kr.</p>
+        </div>
+
+        <a href="/book/<%= event._id %>" class="details button">
+            Book oplevelse
+        </a>
+    </div>
+</section>
+
+<!-- Anbefalingssektion -->
+<section class="related wrapper">
+    <h2>Andre oplevelser du måske kan lide</h2>
+
+    <div class="related grid">
+        <% if (relatedEvents && relatedEvents.length > 0) { %>
+            <% relatedEvents.forEach(ev => { %>
+                <a href="/details/<%= ev._id %>" class="related card">
+                    <div class="related image">
+                        <img src="<%= ev.image %>" alt="<%= ev.title %>">
+                    </div>
+                    <h3><%= ev.title %></h3>
+                </a>
+            <% }) %>
+        <% } else { %>
+            <p>Ingen lignende oplevelser fundet.</p>
+        <% } %>
+    </div>
+</section>
+
+
