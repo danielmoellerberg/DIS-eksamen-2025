@@ -48,13 +48,20 @@ async function checkDateAvailability(experienceId, date) {
   }
 }
 
-// Hent tilgængelige datoer for en oplevelse (fra 1. december 2025)
+// Hent tilgængelige datoer for en oplevelse (fra i dag og 60 dage frem)
 async function getAvailableDates(experienceId) {
   try {
     // Sikr at forbindelsen er åben
     await ensureConnection();
-    // Start fra 1. december 2025
-    const startDate = new Date('2025-12-01');
+    // Start fra i dag (eller 1. december 2025 hvis det er senere)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const decemberStart = new Date('2025-12-01');
+    decemberStart.setHours(0, 0, 0, 0);
+    
+    // Brug den seneste dato (enten i dag eller 1. december 2025)
+    const startDate = today > decemberStart ? today : decemberStart;
+    
     const futureDate = new Date();
     futureDate.setDate(startDate.getDate() + 60);
     
@@ -85,14 +92,15 @@ async function getAvailableDates(experienceId) {
       };
     });
     
-    // Datoer der skal have "few seats left" (5., 10., 15., 20., 25. december)
-    const fewSeatsDates = [
-      '2025-12-05',
-      '2025-12-10',
-      '2025-12-15',
-      '2025-12-20',
-      '2025-12-25'
-    ];
+    // Datoer der skal have "few seats left" (5., 10., 15., 20., 25. i hver måned)
+    // Generer few seats dates for de næste 60 dage
+    const fewSeatsDates = [];
+    for (let d = new Date(startDate); d <= futureDate; d.setDate(d.getDate() + 1)) {
+      const day = d.getDate();
+      if (day === 5 || day === 10 || day === 15 || day === 20 || day === 25) {
+        fewSeatsDates.push(d.toISOString().split('T')[0]);
+      }
+    }
     
     // Generer alle datoer i perioden og tjek tilgængelighed
     const availableDates = [];

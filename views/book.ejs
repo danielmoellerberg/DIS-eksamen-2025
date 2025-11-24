@@ -8,7 +8,7 @@
         <div class="booking calendar-card">
             <div class="calendar-header">
                 <button class="calendar-nav" id="prevMonth">←</button>
-                <h2 class="calendar-month" id="currentMonth">December 2025</h2>
+                <h2 class="calendar-month" id="currentMonth"></h2>
                 <button class="calendar-nav" id="nextMonth">→</button>
             </div>
             
@@ -85,8 +85,11 @@
     (function() {
         const experienceId = document.getElementById('experienceId').value;
         const basePrice = parseFloat(document.getElementById('basePrice').value);
-        // Start i december 2025
-        let currentDate = new Date(2025, 11, 1); // December er måned 11 (0-indexed)
+        // Start i den aktuelle måned (eller december 2025 hvis det er senere)
+        const today = new Date();
+        const decemberStart = new Date(2025, 11, 1);
+        const startMonth = today > decemberStart ? today : decemberStart;
+        let currentDate = new Date(startMonth.getFullYear(), startMonth.getMonth(), 1);
         let selectedDate = null;
         let availableDates = [];
         
@@ -101,9 +104,12 @@
         const bookingForm = document.getElementById('bookingForm');
         const bookingMessage = document.getElementById('bookingMessage');
         
-        // Minimum dato (1. december 2025)
-        const minDate = new Date(2025, 11, 1);
-        minDate.setHours(0, 0, 0, 0);
+        // Minimum dato (i dag eller 1. december 2025, hvis det er senere)
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const decemberStart = new Date(2025, 11, 1);
+        decemberStart.setHours(0, 0, 0, 0);
+        const minDate = today > decemberStart ? today : decemberStart;
         
         // Render kalender med placeholder mens data hentes
         function renderCalendarPlaceholder() {
@@ -298,8 +304,9 @@
         prevBtn.addEventListener('click', () => {
             const newDate = new Date(currentDate);
             newDate.setMonth(currentDate.getMonth() - 1);
-            // Forhindre navigation før december 2025
-            if (newDate >= minDate || (newDate.getFullYear() === 2025 && newDate.getMonth() === 11)) {
+            // Forhindre navigation før minimum dato
+            const newMonthStart = new Date(newDate.getFullYear(), newDate.getMonth(), 1);
+            if (newMonthStart >= minDate) {
                 currentDate = newDate;
                 renderCalendar();
             }
