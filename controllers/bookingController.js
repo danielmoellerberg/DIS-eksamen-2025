@@ -200,8 +200,33 @@ async function createBookingAndRedirect(req, res) {
       return res.status(400).send("Alle påkrævede felter skal udfyldes");
     }
     
+    const parsedExperienceId = parseInt(experienceId);
+    
+    // Tjek om experience findes i databasen
+    let experience = null;
+    try {
+      experience = await bookingModel.getExperienceById(parsedExperienceId);
+    } catch (dbError) {
+      console.log("Kunne ikke hente experience fra database:", dbError.message);
+    }
+    
+    // Hvis experience ikke findes i database, tjek om det er en demoEvent
+    if (!experience) {
+      const demoEvent = demoEvents.find(ev => ev.id === parsedExperienceId || ev._id === parsedExperienceId);
+      if (demoEvent) {
+        console.warn(`⚠️ Experience ID ${parsedExperienceId} findes kun som demoEvent, ikke i database.`);
+        console.warn("⚠️ Booking kan ikke oprettes fordi experience ikke findes i databasen.");
+        return res.status(400).send(
+          `Oplevelse med ID ${parsedExperienceId} findes ikke i databasen. ` +
+          `Du skal først oprette oplevelsen i databasen før du kan booke den.`
+        );
+      } else {
+        return res.status(404).send(`Oplevelse med ID ${parsedExperienceId} blev ikke fundet`);
+      }
+    }
+    
     // Tjek om datoen stadig er tilgængelig
-    const availability = await bookingModel.checkDateAvailability(experienceId, bookingDate);
+    const availability = await bookingModel.checkDateAvailability(parsedExperienceId, bookingDate);
     
     if (!availability.available || availability.remainingSpots < numberOfParticipants) {
       console.error("Dato ikke tilgængelig:", { availability, numberOfParticipants });
@@ -210,7 +235,7 @@ async function createBookingAndRedirect(req, res) {
     
     // Opret booking i databasen
     const bookingData = {
-      experienceId: parseInt(experienceId),
+      experienceId: parsedExperienceId,
       bookingDate,
       bookingTime: bookingTime || null,
       customerName: customerName.trim(),
