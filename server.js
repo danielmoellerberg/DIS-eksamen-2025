@@ -11,6 +11,7 @@ const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || "0.0.0.0";
 const CLOUDINARY_VIDEO_URL = process.env.CLOUDINARY_VIDEO_URL || "";
 const CLOUDINARY_VIDEO_POSTER = process.env.CLOUDINARY_VIDEO_POSTER || "";
+const CLOUDINARY_EMBED_URL = process.env.CLOUDINARY_EMBED_URL || "";
 
 // Middleware
 app.use(cors());
@@ -30,6 +31,7 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use((req, res, next) => {
   res.locals.heroVideoUrl = CLOUDINARY_VIDEO_URL;
   res.locals.heroVideoPoster = CLOUDINARY_VIDEO_POSTER;
+  res.locals.cloudinaryEmbedUrl = CLOUDINARY_EMBED_URL;
   next();
 });
 
