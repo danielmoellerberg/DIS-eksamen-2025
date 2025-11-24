@@ -85,11 +85,13 @@
     (function() {
         const experienceId = document.getElementById('experienceId').value;
         const basePrice = parseFloat(document.getElementById('basePrice').value);
-        // Start i den aktuelle måned (eller december 2025 hvis det er senere)
-        const today = new Date();
-        const decemberStart = new Date(2025, 11, 1);
-        const startMonth = today > decemberStart ? today : decemberStart;
-        let currentDate = new Date(startMonth.getFullYear(), startMonth.getMonth(), 1);
+        
+        // Minimum dato (1. december 2025)
+        const minDate = new Date(2025, 11, 1);
+        minDate.setHours(0, 0, 0, 0);
+        
+        // Start i december 2025
+        let currentDate = new Date(2025, 11, 1);
         let selectedDate = null;
         let availableDates = [];
         
@@ -104,13 +106,6 @@
         const bookingForm = document.getElementById('bookingForm');
         const bookingMessage = document.getElementById('bookingMessage');
         
-        // Minimum dato (i dag eller 1. december 2025, hvis det er senere)
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const decemberStart = new Date(2025, 11, 1);
-        decemberStart.setHours(0, 0, 0, 0);
-        const minDate = today > decemberStart ? today : decemberStart;
-        
         // Render kalender med placeholder mens data hentes
         function renderCalendarPlaceholder() {
             const year = currentDate.getFullYear();
@@ -118,12 +113,19 @@
             
             const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
                 'July', 'August', 'September', 'October', 'November', 'December'];
-            currentMonthEl.textContent = `${monthNames[month]} ${year}`;
+            if (currentMonthEl) {
+                currentMonthEl.textContent = `${monthNames[month]} ${year}`;
+            }
             
             const firstDay = new Date(year, month, 1);
             const lastDay = new Date(year, month + 1, 0);
             const daysInMonth = lastDay.getDate();
             const startingDayOfWeek = (firstDay.getDay() + 6) % 7;
+            
+            if (!calendarGrid) {
+                console.error('calendarGrid element ikke fundet');
+                return;
+            }
             
             calendarGrid.innerHTML = '';
             
@@ -137,8 +139,9 @@
                 const cell = document.createElement('div');
                 const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 const dateObj = new Date(year, month, day);
+                dateObj.setHours(0, 0, 0, 0);
                 
-                // Tjek om datoen er før 1. december 2025
+                // Tjek om datoen er før minimum dato
                 if (dateObj < minDate) {
                     cell.className = 'calendar-day past';
                     cell.textContent = day;
@@ -304,7 +307,7 @@
         prevBtn.addEventListener('click', () => {
             const newDate = new Date(currentDate);
             newDate.setMonth(currentDate.getMonth() - 1);
-            // Forhindre navigation før minimum dato
+            // Forhindre navigation før december 2025
             const newMonthStart = new Date(newDate.getFullYear(), newDate.getMonth(), 1);
             if (newMonthStart >= minDate) {
                 currentDate = newDate;
