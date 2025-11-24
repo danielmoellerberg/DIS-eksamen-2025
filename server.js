@@ -93,7 +93,7 @@ app.get("/details/:id", (req, res) => {
   const event = events.find((ev) => String(ev._id) === req.params.id);
 
   if (!event) {
-    return res.status(404).render("404", { title: "Event blev ikke fundet" });
+    return res.status(404).send("Event blev ikke fundet");
   }
 
   const relatedEvents = events.filter((ev) => ev._id !== event._id).slice(0, 2);
@@ -105,6 +105,10 @@ app.get("/details/:id", (req, res) => {
   });
 });
 
+// Booking-side
+const bookingController = require("./controllers/bookingController");
+app.get("/book/:id", bookingController.getBookingPage);
+
 // Test-endpoint
 app.get("/status", (req, res) => {
   res.send(`✅ Serveren kører på port ${PORT}`);
@@ -115,15 +119,23 @@ const experiencesRoutes = require("./routes/experiencesRoutes");
 const userRoutes = require("./routes/userRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
+const bookingRoutes = require("./routes/bookingRoutes");
 
 app.use("/api/experiences", experiencesRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/admins", adminRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/bookings", bookingRoutes);
 
 // 404 fallback
 app.use((req, res) => {
-  res.status(404).render("404", { title: "Siden blev ikke fundet" });
+  // Prøv først at rendere 404 view, hvis det findes
+  try {
+    res.status(404).render("404", { title: "Siden blev ikke fundet" });
+  } catch (err) {
+    // Hvis 404 view ikke findes, send simpel tekst
+    res.status(404).send("404 - Siden blev ikke fundet");
+  }
 });
 
 // Start server

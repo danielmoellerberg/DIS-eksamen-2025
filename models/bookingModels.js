@@ -1,0 +1,146 @@
+const { poolConnect, pool, sql } = require("../config/db");
+
+// Hent en oplevelse efter ID
+async function getExperienceById(id) {
+  try {
+    await poolConnect;
+    const result = await pool
+      .request()
+      .input("id", sql.Int, id)
+      .query("SELECT * FROM experiences WHERE id = @id");
+    
+    return result.recordset[0] || null;
+  } catch (err) {
+    throw new Error("Fejl ved hentning af oplevelse: " + err.message);
+  }
+}
+
+// Tjek om en dato er tilgængelig (tjekker antal bookinger på den dato)
+async function checkDateAvailability(experienceId, date) {
+  try {
+    await poolConnect;
+    const result = await pool
+      .request()
+      .input("experienceId", sql.Int, experienceId)
+      .input("date", sql.Date, date)
+      .query(`
+        SELECT COUNT(*) as bookingCount 
+        FROM bookings 
+        WHERE experience_id = @experienceId 
+        AND booking_date = @date 
+        AND status != 'cancelled'
+      `);
+    
+    const bookingCount = result.recordset[0].bookingCount;
+    // Antager maks 10 deltagere per dato (kan justeres)
+    const maxParticipants = 10;
+    return {
+      available: bookingCount < maxParticipants,
+      bookedCount: bookingCount,
+      remainingSpots: maxParticipants - bookingCount
+    };
+  } catch (err) {
+    throw new Error("Fejl ved tjek af dato tilgængelighed: " + err.message);
+  }
+}
+
+// Hent tilgængelige datoer for en oplevelse (næste 60 dage)
+async function getAvailableDates(experienceId) {
+  try {
+    await poolConnect;
+    const today = new Date();
+    const futureDate = new Date();
+    futureDate.setDate(today.getDate() + 60);
+    
+    // Hent alle bookinger for de næste 60 dage
+    const result = await pool
+      .request()
+      .input("experienceId", sql.Int, experienceId)
+      .input("today", sql.Date, today)
+      .input("futureDate", sql.Date, futureDate)
+      .query(`
+        SELECT 
+          booking_date,
+          COUNT(*) as bookingCount,
+          SUM(number_of_participants) as totalParticipants
+        FROM bookings 
+        WHERE experience_id = @experienceId 
+        AND booking_date >= @today 
+        AND booking_date <= @futureDate
+        AND status != 'cancelled'
+        GROUP BY booking_date
+      `);
+    
+    const bookingsByDate = {};
+    result.recordset.forEach(row => {
+      bookingsByDate[row.booking_date.toISOString().split('T')[0]] = {
+        bookingCount: row.bookingCount,
+        totalParticipants: row.totalParticipants
+      };
+    });
+    
+    // Generer alle datoer i perioden og tjek tilgængelighed
+    const availableDates = [];
+    const maxParticipants = 10; // Maks antal deltagere per dato
+    
+    for (let d = new Date(today); d <= futureDate; d.setDate(d.getDate() + 1)) {
+      const dateStr = d.toISOString().split('T')[0];
+      const booking = bookingsByDate[dateStr];
+      const bookedCount = booking ? booking.totalParticipants : 0;
+      const remainingSpots = maxParticipants - bookedCount;
+      
+      if (remainingSpots > 0) {
+        availableDates.push({
+          date: dateStr,
+          available: true,
+          remainingSpots: remainingSpots,
+          fewSpotsLeft: remainingSpots <= 3 // Få pladser tilbage hvis 3 eller færre
+        });
+      }
+    }
+    
+    return availableDates;
+  } catch (err) {
+    throw new Error("Fejl ved hentning af tilgængelige datoer: " + err.message);
+  }
+}
+
+// Opret en ny booking
+async function createBooking(bookingData) {
+  try {
+    await poolConnect;
+    const result = await pool
+      .request()
+      .input("experienceId", sql.Int, bookingData.experienceId)
+      .input("bookingDate", sql.Date, bookingData.bookingDate)
+      .input("bookingTime", sql.Time, bookingData.bookingTime || null)
+      .input("customerName", sql.NVarChar, bookingData.customerName)
+      .input("customerEmail", sql.NVarChar, bookingData.customerEmail)
+      .input("customerPhone", sql.NVarChar, bookingData.customerPhone || null)
+      .input("numberOfParticipants", sql.Int, bookingData.numberOfParticipants)
+      .input("totalPrice", sql.Decimal(10, 2), bookingData.totalPrice)
+      .input("status", sql.NVarChar, bookingData.status || "pending")
+      .query(`
+        INSERT INTO bookings 
+        (experience_id, booking_date, booking_time, customer_name, customer_email, customer_phone, number_of_participants, total_price, status)
+        VALUES 
+        (@experienceId, @bookingDate, @bookingTime, @customerName, @customerEmail, @customerPhone, @numberOfParticipants, @totalPrice, @status);
+        SELECT SCOPE_IDENTITY() as id;
+      `);
+    
+    return {
+      id: result.recordset[0].id,
+      rowsAffected: result.rowsAffected
+    };
+  } catch (err) {
+    throw new Error("Fejl ved oprettelse af booking: " + err.message);
+  }
+}
+
+module.exports = {
+  getExperienceById,
+  checkDateAvailability,
+  getAvailableDates,
+  createBooking,
+};
+

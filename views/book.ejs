@@ -1,0 +1,275 @@
+<section class="booking wrapper">
+    <div class="booking header">
+        <h1><%= experience.title %></h1>
+        <p class="booking price">From DKK <%= experience.price_from || 0 %></p>
+    </div>
+
+    <div class="booking container">
+        <div class="booking calendar-card">
+            <div class="calendar-header">
+                <button class="calendar-nav" id="prevMonth">←</button>
+                <h2 class="calendar-month" id="currentMonth">November 2025</h2>
+                <button class="calendar-nav" id="nextMonth">→</button>
+            </div>
+            
+            <div class="calendar-weekdays">
+                <div>Mon</div>
+                <div>Tue</div>
+                <div>Wed</div>
+                <div>Thu</div>
+                <div>Fri</div>
+                <div>Sat</div>
+                <div>Sun</div>
+            </div>
+            
+            <div class="calendar-grid" id="calendarGrid">
+                <!-- Kalenderen bliver genereret via JavaScript -->
+            </div>
+            
+            <div class="calendar-legend">
+                <div class="legend-item">
+                    <span class="legend-dot few-spots"></span>
+                    <span>Few seats left</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-dot unavailable"></span>
+                    <span>Unavailable</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="booking form-card">
+            <form id="bookingForm" class="booking-form">
+                <input type="hidden" id="experienceId" value="<%= experience.id %>">
+                <input type="hidden" id="selectedDate" name="bookingDate">
+                <input type="hidden" id="basePrice" value="<%= experience.price_from || 0 %>">
+                
+                <div class="form-group">
+                    <label for="customerName">Navn *</label>
+                    <input type="text" id="customerName" name="customerName" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="customerEmail">Email *</label>
+                    <input type="email" id="customerEmail" name="customerEmail" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="customerPhone">Telefon</label>
+                    <input type="tel" id="customerPhone" name="customerPhone">
+                </div>
+                
+                <div class="form-group">
+                    <label for="numberOfParticipants">Antal deltagere *</label>
+                    <input type="number" id="numberOfParticipants" name="numberOfParticipants" min="1" value="1" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="totalPrice">Total pris</label>
+                    <input type="text" id="totalPrice" name="totalPrice" readonly value="<%= experience.price_from || 0 %> DKK">
+                </div>
+                
+                <button type="submit" class="booking-submit-btn" id="submitBtn" disabled>
+                    Book now
+                </button>
+            </form>
+            
+            <div id="bookingMessage" class="booking-message"></div>
+        </div>
+    </div>
+</section>
+
+<script>
+    // Booking kalender funktionalitet
+    (function() {
+        const experienceId = document.getElementById('experienceId').value;
+        const basePrice = parseFloat(document.getElementById('basePrice').value);
+        let currentDate = new Date();
+        let selectedDate = null;
+        let availableDates = [];
+        
+        const calendarGrid = document.getElementById('calendarGrid');
+        const currentMonthEl = document.getElementById('currentMonth');
+        const prevBtn = document.getElementById('prevMonth');
+        const nextBtn = document.getElementById('nextMonth');
+        const selectedDateInput = document.getElementById('selectedDate');
+        const numberOfParticipantsInput = document.getElementById('numberOfParticipants');
+        const totalPriceInput = document.getElementById('totalPrice');
+        const submitBtn = document.getElementById('submitBtn');
+        const bookingForm = document.getElementById('bookingForm');
+        const bookingMessage = document.getElementById('bookingMessage');
+        
+        // Hent tilgængelige datoer fra API
+        async function fetchAvailableDates() {
+            try {
+                const response = await fetch(`/api/bookings/available/${experienceId}`);
+                const data = await response.json();
+                if (data.success) {
+                    availableDates = data.dates;
+                    renderCalendar();
+                }
+            } catch (error) {
+                console.error('Fejl ved hentning af datoer:', error);
+            }
+        }
+        
+        // Render kalender
+        function renderCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            
+            // Opdater måned/år tekst
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'];
+            currentMonthEl.textContent = `${monthNames[month]} ${year}`;
+            
+            // Første dag i måneden
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            const startingDayOfWeek = (firstDay.getDay() + 6) % 7; // Mandag = 0
+            
+            calendarGrid.innerHTML = '';
+            
+            // Tomme celler før månedens start
+            for (let i = 0; i < startingDayOfWeek; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'calendar-day empty';
+                calendarGrid.appendChild(cell);
+            }
+            
+            // Dage i måneden
+            for (let day = 1; day <= daysInMonth; day++) {
+                const cell = document.createElement('div');
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const dateObj = new Date(year, month, day);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                // Tjek om datoen er i fortiden
+                if (dateObj < today) {
+                    cell.className = 'calendar-day past';
+                    cell.textContent = day;
+                } else {
+                    // Tjek om datoen er tilgængelig
+                    const availableDate = availableDates.find(d => d.date === dateStr);
+                    
+                    if (availableDate && availableDate.available) {
+                        cell.className = 'calendar-day available';
+                        if (availableDate.fewSpotsLeft) {
+                            cell.classList.add('few-spots');
+                            const dot = document.createElement('span');
+                            dot.className = 'availability-dot';
+                            cell.appendChild(dot);
+                        }
+                        cell.textContent = day;
+                        cell.dataset.date = dateStr;
+                        cell.addEventListener('click', () => selectDate(dateStr, cell));
+                    } else {
+                        cell.className = 'calendar-day unavailable';
+                        cell.textContent = day;
+                    }
+                }
+                
+                calendarGrid.appendChild(cell);
+            }
+        }
+        
+        // Vælg dato
+        function selectDate(dateStr, cellElement) {
+            // Fjern tidligere valg
+            document.querySelectorAll('.calendar-day.selected').forEach(cell => {
+                cell.classList.remove('selected');
+            });
+            
+            // Tilføj valg
+            cellElement.classList.add('selected');
+            selectedDate = dateStr;
+            selectedDateInput.value = dateStr;
+            submitBtn.disabled = false;
+            calculateTotalPrice();
+        }
+        
+        // Beregn total pris
+        function calculateTotalPrice() {
+            if (!selectedDate) return;
+            const participants = parseInt(numberOfParticipantsInput.value) || 1;
+            const total = basePrice * participants;
+            totalPriceInput.value = `${total.toFixed(2)} DKK`;
+        }
+        
+        // Måned navigation
+        prevBtn.addEventListener('click', () => {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar();
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar();
+        });
+        
+        // Opdater pris når antal deltagere ændres
+        numberOfParticipantsInput.addEventListener('change', calculateTotalPrice);
+        
+        // Submit booking form
+        bookingForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!selectedDate) {
+                bookingMessage.textContent = 'Vælg venligst en dato';
+                bookingMessage.className = 'booking-message error';
+                return;
+            }
+            
+            const formData = {
+                experienceId: experienceId,
+                bookingDate: selectedDate,
+                customerName: document.getElementById('customerName').value,
+                customerEmail: document.getElementById('customerEmail').value,
+                customerPhone: document.getElementById('customerPhone').value,
+                numberOfParticipants: parseInt(numberOfParticipantsInput.value),
+                totalPrice: parseFloat(totalPriceInput.value.replace(' DKK', ''))
+            };
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Booker...';
+            
+            try {
+                const response = await fetch('/api/bookings', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    bookingMessage.textContent = 'Booking oprettet succesfuldt!';
+                    bookingMessage.className = 'booking-message success';
+                    bookingForm.reset();
+                    selectedDate = null;
+                    selectedDateInput.value = '';
+                    submitBtn.disabled = true;
+                    fetchAvailableDates(); // Opdater tilgængelige datoer
+                } else {
+                    bookingMessage.textContent = data.error || 'Fejl ved oprettelse af booking';
+                    bookingMessage.className = 'booking-message error';
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Book now';
+                }
+            } catch (error) {
+                bookingMessage.textContent = 'Der opstod en fejl. Prøv igen.';
+                bookingMessage.className = 'booking-message error';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Book now';
+            }
+        });
+        
+        // Initialiser
+        fetchAvailableDates();
+    })();
+</script>
+
