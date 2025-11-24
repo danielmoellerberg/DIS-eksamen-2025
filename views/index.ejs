@@ -1,18 +1,5 @@
 <section class="hero">
-    <% if (cloudinaryCloudName && cloudinaryVideoPublicId) { %>
-        <div class="hero-video">
-            <video
-                id="heroPlayer"
-                class="cld-video-player cld-fluid"
-                muted
-                autoplay
-                loop
-                playsinline
-                data-cloud-name="<%= cloudinaryCloudName %>"
-                data-public-id="<%= cloudinaryVideoPublicId %>"
-            ></video>
-        </div>
-    <% } else if (heroVideoUrl) { %>
+    <% if (heroVideoUrl) { %>
         <div class="hero-video">
             <video
                 autoplay
