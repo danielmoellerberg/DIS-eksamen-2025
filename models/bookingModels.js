@@ -1,9 +1,10 @@
-const { poolConnect, pool, sql } = require("../config/db");
+const { poolConnect, pool, sql, ensureConnection } = require("../config/db");
 
 // Hent en oplevelse efter ID
 async function getExperienceById(id) {
   try {
-    await poolConnect;
+    // Sikr at forbindelsen er åben
+    await ensureConnection();
     const result = await pool
       .request()
       .input("id", sql.Int, id)
@@ -18,7 +19,9 @@ async function getExperienceById(id) {
 // Tjek om en dato er tilgængelig (tjekker antal bookinger på den dato)
 async function checkDateAvailability(experienceId, date) {
   try {
-    await poolConnect;
+    // Sikr at forbindelsen er åben
+    await ensureConnection();
+    
     const result = await pool
       .request()
       .input("experienceId", sql.Int, experienceId)
@@ -40,6 +43,7 @@ async function checkDateAvailability(experienceId, date) {
       remainingSpots: maxParticipants - bookingCount
     };
   } catch (err) {
+    console.error("Fejl i checkDateAvailability:", err);
     throw new Error("Fejl ved tjek af dato tilgængelighed: " + err.message);
   }
 }
@@ -47,7 +51,8 @@ async function checkDateAvailability(experienceId, date) {
 // Hent tilgængelige datoer for en oplevelse (fra 1. december 2025)
 async function getAvailableDates(experienceId) {
   try {
-    await poolConnect;
+    // Sikr at forbindelsen er åben
+    await ensureConnection();
     // Start fra 1. december 2025
     const startDate = new Date('2025-12-01');
     const futureDate = new Date();
@@ -122,7 +127,8 @@ async function getAvailableDates(experienceId) {
 // Opret en ny booking
 async function createBooking(bookingData) {
   try {
-    await poolConnect;
+    // Sikr at forbindelsen er åben
+    await ensureConnection();
     
     console.log("Indsætter booking i database med data:", bookingData);
     

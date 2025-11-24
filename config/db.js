@@ -19,14 +19,29 @@ const config = {
 };
 
 const pool = new sql.ConnectionPool(config);
-const poolConnect = pool.connect().catch((err) => {
-  console.error("❌ Kunne ikke forbinde til databasen:", err.message);
-});
+
+// Funktion til at sikre forbindelsen er åben
+async function ensureConnection() {
+  try {
+    if (!pool.connected) {
+      await pool.connect();
+      console.log("✅ Database forbindelse etableret");
+    }
+    return pool;
+  } catch (err) {
+    console.error("❌ Kunne ikke forbinde til databasen:", err.message);
+    throw err;
+  }
+}
+
+// Initialiser forbindelse
+const poolConnect = ensureConnection();
 
 module.exports = {
   sql,
   poolConnect,
   pool,
+  ensureConnection,
 };
 
 
