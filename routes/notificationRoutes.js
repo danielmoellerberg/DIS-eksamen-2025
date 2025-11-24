@@ -5,6 +5,9 @@ const notificationController = require("../controllers/notificationController");
 // Send e-mail notifikation
 router.post("/email", notificationController.sendEmailNotification);
 
+// Send booking-bekræftelse
+router.post("/email/booking-confirmation", notificationController.sendBookingConfirmation);
+
 // Send SMS notifikation
 router.post("/sms", notificationController.sendSmsNotification);
 
