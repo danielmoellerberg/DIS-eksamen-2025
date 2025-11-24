@@ -178,11 +178,32 @@ async function createBooking(bookingData) {
   }
 }
 
+// Hent booking efter ID
+async function getBookingById(bookingId) {
+  try {
+    await ensureConnection();
+    const result = await pool
+      .request()
+      .input("bookingId", sql.Int, bookingId)
+      .query(`
+        SELECT b.*, e.title as experience_title
+        FROM bookings b
+        INNER JOIN experiences e ON b.experience_id = e.id
+        WHERE b.id = @bookingId
+      `);
+    
+    return result.recordset[0] || null;
+  } catch (err) {
+    throw new Error("Fejl ved hentning af booking: " + err.message);
+  }
+}
+
 module.exports = {
   getExperienceById,
   checkDateAvailability,
   getAvailableDates,
   createBooking,
+  getBookingById,
   ensureConnection,
   pool,
   sql,

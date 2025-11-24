@@ -1,20 +1,86 @@
 <section class="payment wrapper">
     <div class="payment container">
-        <div class="payment-success">
-            <h1>✅ Booking bekræftet!</h1>
-            <p class="booking-id">Booking ID: <strong><%= bookingId %></strong></p>
+        <div class="payment-header">
+            <h1>Betaling</h1>
+            <p class="booking-id">Booking ID: <strong><%= booking.id %></strong></p>
+        </div>
+        
+        <div class="payment-details">
+            <div class="detail-row">
+                <span class="detail-label">Oplevelse:</span>
+                <span class="detail-value"><%= booking.experience_title %></span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Dato:</span>
+                <span class="detail-value"><%= new Date(booking.booking_date).toLocaleDateString('da-DK') %></span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Antal deltagere:</span>
+                <span class="detail-value"><%= booking.number_of_participants %></span>
+            </div>
+            <div class="detail-row total">
+                <span class="detail-label">Total pris:</span>
+                <span class="detail-value"><strong><%= parseFloat(booking.total_price).toFixed(2) %> DKK</strong></span>
+            </div>
         </div>
         
         <div class="payment-info">
             <p>Din booking er blevet <strong>gemt i databasen</strong> og er klar til betaling.</p>
-            <p>Her kan du integrere din betalings-API senere.</p>
         </div>
         
         <div class="payment-actions">
-            <a href="/" class="payment-btn">Tilbage til forsiden</a>
+            <button id="payButton" class="payment-btn primary">
+                Betal med kort
+            </button>
+            <a href="/" class="payment-btn secondary">Tilbage til forsiden</a>
         </div>
+        
+        <div id="paymentMessage" class="payment-message"></div>
     </div>
 </section>
+
+<script>
+    (function() {
+        const payButton = document.getElementById('payButton');
+        const paymentMessage = document.getElementById('paymentMessage');
+        const bookingId = <%= booking.id %>;
+        
+        payButton.addEventListener('click', async function() {
+            payButton.disabled = true;
+            payButton.textContent = 'Opretter betalingssession...';
+            paymentMessage.textContent = '';
+            paymentMessage.className = 'payment-message';
+            
+            try {
+                const response = await fetch('/api/payment/create-checkout-session', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ bookingId: bookingId })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.url) {
+                    // Redirect til Stripe checkout
+                    window.location.href = data.url;
+                } else {
+                    paymentMessage.textContent = data.error || 'Fejl ved oprettelse af betalingssession';
+                    paymentMessage.className = 'payment-message error';
+                    payButton.disabled = false;
+                    payButton.textContent = 'Betal med kort';
+                }
+            } catch (error) {
+                console.error('Fejl:', error);
+                paymentMessage.textContent = 'Der opstod en fejl. Prøv igen.';
+                paymentMessage.className = 'payment-message error';
+                payButton.disabled = false;
+                payButton.textContent = 'Betal med kort';
+            }
+        });
+    })();
+</script>
 
 <style>
 .payment.wrapper {
@@ -63,19 +129,107 @@
     margin-top: 30px;
 }
 
-.payment-btn {
-    display: inline-block;
-    padding: 14px 28px;
-    background: #d1e751;
-    color: #06290f;
-    text-decoration: none;
-    border-radius: 10px;
-    font-weight: 600;
-    transition: background 0.2s ease;
+.payment-details {
+    background: #f9f9f9;
+    border-radius: 12px;
+    padding: 24px;
+    margin: 30px 0;
+    text-align: left;
 }
 
-.payment-btn:hover {
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-row.total {
+    margin-top: 12px;
+    padding-top: 20px;
+    border-top: 2px solid #06290f;
+    font-size: 18px;
+}
+
+.detail-label {
+    color: #666;
+    font-weight: 500;
+}
+
+.detail-value {
+    color: #06290f;
+    font-weight: 600;
+}
+
+.payment-actions {
+    margin-top: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.payment-btn {
+    display: inline-block;
+    padding: 16px 32px;
+    border-radius: 10px;
+    font-weight: 600;
+    text-decoration: none;
+    text-align: center;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    font-family: 'Inter', sans-serif;
+}
+
+.payment-btn.primary {
+    background: #06290f;
+    color: white;
+}
+
+.payment-btn.primary:hover:not(:disabled) {
+    background: #0a3a1a;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.payment-btn.primary:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.payment-btn.secondary {
+    background: #d1e751;
+    color: #06290f;
+}
+
+.payment-btn.secondary:hover {
     background: #c4d84b;
+}
+
+.payment-message {
+    margin-top: 20px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    text-align: center;
+}
+
+.payment-message.error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.payment-message.success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
 }
 </style>
 

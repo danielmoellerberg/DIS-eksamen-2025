@@ -345,15 +345,75 @@ async function getPaymentPage(req, res) {
       return res.status(400).send("Ugyldig booking ID");
     }
     
-    // Hent booking information (kan udvides senere)
-    // For nu viser vi bare en simpel betalingsside
+    // Hent booking information fra databasen
+    const booking = await bookingModel.getBookingById(bookingId);
+    
+    if (!booking) {
+      return res.status(404).send("Booking blev ikke fundet");
+    }
     
     res.render("payment", {
       title: "Betaling",
+      booking: booking,
       bookingId: bookingId
     });
   } catch (err) {
     console.error("Fejl ved hentning af betalingsside:", err);
+    res.status(500).send(`Fejl: ${err.message}`);
+  }
+}
+
+// Success side efter betaling
+async function getPaymentSuccess(req, res) {
+  try {
+    const bookingId = parseInt(req.query.booking_id);
+    const sessionId = req.query.session_id;
+    
+    if (bookingId) {
+      // Opdater booking status til "confirmed" hvis betalingen er gennemført
+      // (Du kan også verificere med Stripe webhook)
+      const booking = await bookingModel.getBookingById(bookingId);
+      
+      res.render("payment-success", {
+        title: "Betaling gennemført",
+        booking: booking,
+        sessionId: sessionId
+      });
+    } else {
+      res.render("payment-success", {
+        title: "Betaling gennemført",
+        booking: null,
+        sessionId: sessionId
+      });
+    }
+  } catch (err) {
+    console.error("Fejl ved hentning af success-side:", err);
+    res.status(500).send(`Fejl: ${err.message}`);
+  }
+}
+
+// Cancel side hvis betalingen annulleres
+async function getPaymentCancel(req, res) {
+  try {
+    const bookingId = parseInt(req.query.booking_id);
+    
+    if (bookingId) {
+      const booking = await bookingModel.getBookingById(bookingId);
+      
+      res.render("payment-cancel", {
+        title: "Betaling annulleret",
+        booking: booking,
+        bookingId: bookingId
+      });
+    } else {
+      res.render("payment-cancel", {
+        title: "Betaling annulleret",
+        booking: null,
+        bookingId: null
+      });
+    }
+  } catch (err) {
+    console.error("Fejl ved hentning af cancel-side:", err);
     res.status(500).send(`Fejl: ${err.message}`);
   }
 }
@@ -364,5 +424,7 @@ module.exports = {
   createBooking,
   createBookingAndRedirect,
   getPaymentPage,
+  getPaymentSuccess,
+  getPaymentCancel,
 };
 

@@ -110,6 +110,8 @@ app.get("/book/:id", bookingController.getBookingPage);
 
 // Betalingsside
 app.get("/payment/:id", bookingController.getPaymentPage);
+app.get("/payment/success", bookingController.getPaymentSuccess);
+app.get("/payment/cancel", bookingController.getPaymentCancel);
 
 // Test-endpoint
 app.get("/status", (req, res) => {
@@ -122,12 +124,14 @@ const userRoutes = require("./routes/userRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
+const paymentRoutes = require("./routes/paymentRoutes");
 
 app.use("/api/experiences", experiencesRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/admins", adminRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/bookings", bookingRoutes);
+app.use("/api/payment", paymentRoutes);
 
 // 404 fallback
 app.use((req, res) => {

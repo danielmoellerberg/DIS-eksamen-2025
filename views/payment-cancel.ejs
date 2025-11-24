@@ -1,0 +1,109 @@
+<section class="payment wrapper">
+    <div class="payment container">
+        <div class="payment-cancel">
+            <h1>⚠️ Betaling annulleret</h1>
+            <% if (booking) { %>
+                <p class="booking-id">Booking ID: <strong><%= booking.id %></strong></p>
+            <% } %>
+        </div>
+        
+        <div class="payment-info">
+            <p>Din betaling blev annulleret. Din booking er stadig gemt, men ikke betalt.</p>
+            <% if (booking) { %>
+                <p>Du kan prøve at betale igen ved at gå til: <a href="/payment/<%= booking.id %>">Betalingsside</a></p>
+            <% } %>
+        </div>
+        
+        <div class="payment-actions">
+            <% if (booking) { %>
+                <a href="/payment/<%= booking.id %>" class="payment-btn primary">Prøv igen</a>
+            <% } %>
+            <a href="/" class="payment-btn secondary">Tilbage til forsiden</a>
+        </div>
+    </div>
+</section>
+
+<style>
+.payment.wrapper {
+    max-width: 800px;
+    margin: 120px auto 60px;
+    padding: 0 24px;
+}
+
+.payment.container {
+    background: white;
+    border-radius: 16px;
+    padding: 40px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    text-align: center;
+}
+
+.payment.container h1 {
+    font-size: 32px;
+    color: #06290f;
+    margin-bottom: 20px;
+}
+
+.payment-cancel {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.booking-id {
+    font-size: 18px;
+    color: #666;
+    margin-top: 10px;
+}
+
+.booking-id strong {
+    color: #06290f;
+    font-size: 20px;
+}
+
+.payment-info {
+    margin: 30px 0;
+    color: #666;
+    line-height: 1.6;
+}
+
+.payment-info a {
+    color: #06290f;
+    text-decoration: underline;
+}
+
+.payment-actions {
+    margin-top: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.payment-btn {
+    display: inline-block;
+    padding: 14px 28px;
+    border-radius: 10px;
+    font-weight: 600;
+    text-decoration: none;
+    text-align: center;
+    transition: background 0.2s ease;
+}
+
+.payment-btn.primary {
+    background: #06290f;
+    color: white;
+}
+
+.payment-btn.primary:hover {
+    background: #0a3a1a;
+}
+
+.payment-btn.secondary {
+    background: #d1e751;
+    color: #06290f;
+}
+
+.payment-btn.secondary:hover {
+    background: #c4d84b;
+}
+</style>
+
