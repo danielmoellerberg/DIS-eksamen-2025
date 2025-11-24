@@ -175,5 +175,8 @@ module.exports = {
   checkDateAvailability,
   getAvailableDates,
   createBooking,
+  ensureConnection,
+  pool,
+  sql,
 };
 

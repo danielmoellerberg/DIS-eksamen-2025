@@ -52,6 +52,35 @@ const demoEvents = [
   },
 ];
 
+// Mapping fra demoEvent ID til database titel (så vi kan finde det rigtige database ID)
+const demoEventToTitle = {
+  1: "Workshop i keramik",
+  2: "Guidet naturtur",
+  3: "Madlavningskursus"
+};
+
+// Hjælpefunktion til at finde database ID baseret på demoEvent ID eller titel
+async function findDatabaseExperienceId(demoEventId) {
+  try {
+    const title = demoEventToTitle[demoEventId];
+    if (!title) return null;
+    
+    await bookingModel.ensureConnection();
+    const result = await bookingModel.pool
+      .request()
+      .input("title", bookingModel.sql.NVarChar, title)
+      .query("SELECT id FROM experiences WHERE title = @title ORDER BY id DESC");
+    
+    if (result.recordset.length > 0) {
+      return result.recordset[0].id; // Returner det højeste ID hvis der er flere
+    }
+    return null;
+  } catch (err) {
+    console.error("Fejl ved søgning efter experience:", err);
+    return null;
+  }
+}
+
 // Vis booking-side
 async function getBookingPage(req, res) {
   try {
@@ -61,17 +90,35 @@ async function getBookingPage(req, res) {
       return res.status(400).send("Ugyldig oplevelse ID");
     }
     
-    // Prøv først at hente fra database
+    // Prøv først at hente fra database med det direkte ID
     let experience = null;
     try {
       experience = await bookingModel.getExperienceById(experienceId);
     } catch (dbError) {
-      console.log("Database fejl, bruger demoEvents som fallback:", dbError.message);
+      console.log("Database fejl ved direkte lookup:", dbError.message);
     }
     
-    // Hvis ikke fundet i database, brug demoEvents som fallback
+    // Hvis ikke fundet og det er et demoEvent ID (1, 2, 3), prøv at finde database ID via titel
+    if (!experience && (experienceId === 1 || experienceId === 2 || experienceId === 3)) {
+      console.log(`Prøver at finde database ID for demoEvent ID ${experienceId}`);
+      const databaseId = await findDatabaseExperienceId(experienceId);
+      
+      if (databaseId) {
+        console.log(`Fundet database ID ${databaseId} for demoEvent ID ${experienceId}`);
+        try {
+          experience = await bookingModel.getExperienceById(databaseId);
+        } catch (dbError) {
+          console.log("Database fejl ved lookup med database ID:", dbError.message);
+        }
+      }
+    }
+    
+    // Hvis stadig ikke fundet, brug demoEvents som fallback (kun til visning, ikke booking)
     if (!experience) {
       experience = demoEvents.find(ev => ev.id === experienceId || ev._id === experienceId);
+      if (experience) {
+        console.warn(`⚠️ Experience ID ${experienceId} findes kun som demoEvent. Booking vil fejle.`);
+      }
     }
     
     if (!experience) {
@@ -99,10 +146,18 @@ async function getBookingPage(req, res) {
 // Hent tilgængelige datoer (API endpoint)
 async function getAvailableDates(req, res) {
   try {
-    const experienceId = parseInt(req.params.id);
+    let experienceId = parseInt(req.params.id);
     
     if (!experienceId) {
       return res.status(400).json({ error: "Ugyldig oplevelse ID" });
+    }
+    
+    // Hvis det er et demoEvent ID (1, 2, 3), find det rigtige database ID
+    if (experienceId === 1 || experienceId === 2 || experienceId === 3) {
+      const databaseId = await findDatabaseExperienceId(experienceId);
+      if (databaseId) {
+        experienceId = databaseId;
+      }
     }
     
     const availableDates = await bookingModel.getAvailableDates(experienceId);
@@ -200,7 +255,7 @@ async function createBookingAndRedirect(req, res) {
       return res.status(400).send("Alle påkrævede felter skal udfyldes");
     }
     
-    const parsedExperienceId = parseInt(experienceId);
+    let parsedExperienceId = parseInt(experienceId);
     
     // Tjek om experience findes i databasen
     let experience = null;
@@ -210,32 +265,48 @@ async function createBookingAndRedirect(req, res) {
       console.log("Kunne ikke hente experience fra database:", dbError.message);
     }
     
-    // Hvis experience ikke findes i database, tjek om det er en demoEvent
-    if (!experience) {
-      const demoEvent = demoEvents.find(ev => ev.id === parsedExperienceId || ev._id === parsedExperienceId);
-      if (demoEvent) {
-        console.warn(`⚠️ Experience ID ${parsedExperienceId} findes kun som demoEvent, ikke i database.`);
-        console.warn("⚠️ Booking kan ikke oprettes fordi experience ikke findes i databasen.");
-        return res.status(400).send(
-          `Oplevelse med ID ${parsedExperienceId} findes ikke i databasen. ` +
-          `Du skal først oprette oplevelsen i databasen før du kan booke den.`
-        );
-      } else {
-        return res.status(404).send(`Oplevelse med ID ${parsedExperienceId} blev ikke fundet`);
+    // Hvis experience ikke findes og det er et demoEvent ID (1, 2, 3), prøv at finde database ID via titel
+    if (!experience && (parsedExperienceId === 1 || parsedExperienceId === 2 || parsedExperienceId === 3)) {
+      console.log(`Prøver at finde database ID for demoEvent ID ${parsedExperienceId}`);
+      const databaseId = await findDatabaseExperienceId(parsedExperienceId);
+      
+      if (databaseId) {
+        console.log(`Fundet database ID ${databaseId} for demoEvent ID ${parsedExperienceId}`);
+        parsedExperienceId = databaseId; // Opdater til database ID
+        try {
+          experience = await bookingModel.getExperienceById(databaseId);
+        } catch (dbError) {
+          console.log("Database fejl ved lookup med database ID:", dbError.message);
+        }
       }
     }
     
-    // Tjek om datoen stadig er tilgængelig
-    const availability = await bookingModel.checkDateAvailability(parsedExperienceId, bookingDate);
+    // Hvis experience stadig ikke findes, fejl
+    if (!experience) {
+      const demoEvent = demoEvents.find(ev => ev.id === parseInt(experienceId) || ev._id === parseInt(experienceId));
+      if (demoEvent) {
+        console.warn(`⚠️ Experience ID ${experienceId} findes kun som demoEvent, ikke i database.`);
+        console.warn("⚠️ Booking kan ikke oprettes fordi experience ikke findes i databasen.");
+        return res.status(400).send(
+          `Oplevelse med ID ${experienceId} findes ikke i databasen. ` +
+          `Du skal først oprette oplevelsen i databasen før du kan booke den.`
+        );
+      } else {
+        return res.status(404).send(`Oplevelse med ID ${experienceId} blev ikke fundet`);
+      }
+    }
+    
+    // Tjek om datoen stadig er tilgængelig (brug det opdaterede database ID)
+    const availability = await bookingModel.checkDateAvailability(experience.id, bookingDate);
     
     if (!availability.available || availability.remainingSpots < numberOfParticipants) {
       console.error("Dato ikke tilgængelig:", { availability, numberOfParticipants });
       return res.status(400).send("Datoen er ikke længere tilgængelig for det antal deltagere");
     }
     
-    // Opret booking i databasen
+    // Opret booking i databasen (brug det rigtige database ID)
     const bookingData = {
-      experienceId: parsedExperienceId,
+      experienceId: experience.id,
       bookingDate,
       bookingTime: bookingTime || null,
       customerName: customerName.trim(),
