@@ -165,6 +165,7 @@
                 const data = await response.json();
                 if (data.success) {
                     availableDates = data.dates;
+                    console.log('Tilgængelige datoer hentet:', availableDates.length, 'datoer');
                     renderCalendar();
                     
                     // Hvis der er en valgt dato, marker den igen efter render
@@ -174,6 +175,9 @@
                             selectedCell.classList.add('selected');
                         }
                     }
+                } else {
+                    console.warn('API returnerede ikke success:', data);
+                    renderCalendar(); // Render alligevel
                 }
             } catch (error) {
                 console.error('Fejl ved hentning af datoer:', error);
@@ -213,19 +217,20 @@
                 const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 const dateObj = new Date(year, month, day);
                 
-                // Tjek om datoen er før 1. december 2025
+                // Tjek om datoen er før minimum dato
+                dateObj.setHours(0, 0, 0, 0);
                 if (dateObj < minDate) {
                     cell.className = 'calendar-day past';
                     cell.textContent = day;
                 } else {
-                    // Tjek om datoen er tilgængelig (enten fra API eller som placeholder)
+                    // Tjek om datoen er i availableDates array
                     const availableDate = availableDates.find(d => d.date === dateStr);
-                    const isAvailable = availableDate && availableDate.available;
                     
-                    // Hvis ingen data endnu, vis som tilgængelig (placeholder)
-                    if (availableDates.length === 0 || isAvailable) {
+                    // Hvis datoen er i array og er tilgængelig, eller hvis den ikke er i array (placeholder)
+                    if (availableDate && availableDate.available) {
+                        // Dato er bekræftet tilgængelig fra API
                         cell.className = 'calendar-day available';
-                        if (availableDate && availableDate.fewSpotsLeft) {
+                        if (availableDate.fewSpotsLeft) {
                             cell.classList.add('few-spots');
                             const dot = document.createElement('span');
                             dot.className = 'availability-dot';
@@ -244,7 +249,24 @@
                             console.log('Klik på dato:', dateStr); // Debug
                             selectDate(dateStr, cell);
                         });
+                    } else if (!availableDate) {
+                        // Dato er ikke i array endnu - vis som tilgængelig placeholder
+                        cell.className = 'calendar-day available';
+                        cell.textContent = day;
+                        cell.dataset.date = dateStr;
+                        
+                        // Tjek om denne dato er valgt
+                        if (selectedDate === dateStr) {
+                            cell.classList.add('selected');
+                        }
+                        
+                        // Sæt event listener
+                        cell.addEventListener('click', function() {
+                            console.log('Klik på dato:', dateStr); // Debug
+                            selectDate(dateStr, cell);
+                        });
                     } else {
+                        // Dato er i array men ikke tilgængelig
                         cell.className = 'calendar-day unavailable';
                         cell.textContent = day;
                     }
