@@ -141,6 +141,8 @@
                     cell.className = 'calendar-day available';
                     cell.textContent = day;
                     cell.dataset.date = dateStr;
+                    // Tilføj event listener så datoer kan klikkes med det samme
+                    cell.addEventListener('click', () => selectDate(dateStr, cell));
                 }
                 
                 calendarGrid.appendChild(cell);
@@ -207,12 +209,14 @@
                     cell.className = 'calendar-day past';
                     cell.textContent = day;
                 } else {
-                    // Tjek om datoen er tilgængelig
+                    // Tjek om datoen er tilgængelig (enten fra API eller som placeholder)
                     const availableDate = availableDates.find(d => d.date === dateStr);
+                    const isAvailable = availableDate && availableDate.available;
                     
-                    if (availableDate && availableDate.available) {
+                    // Hvis ingen data endnu, vis som tilgængelig (placeholder)
+                    if (availableDates.length === 0 || isAvailable) {
                         cell.className = 'calendar-day available';
-                        if (availableDate.fewSpotsLeft) {
+                        if (availableDate && availableDate.fewSpotsLeft) {
                             cell.classList.add('few-spots');
                             const dot = document.createElement('span');
                             dot.className = 'availability-dot';
@@ -226,7 +230,11 @@
                             cell.classList.add('selected');
                         }
                         
-                        cell.addEventListener('click', () => selectDate(dateStr, cell));
+                        // Sæt event listener
+                        cell.addEventListener('click', function() {
+                            console.log('Klik på dato:', dateStr); // Debug
+                            selectDate(dateStr, cell);
+                        });
                     } else {
                         cell.className = 'calendar-day unavailable';
                         cell.textContent = day;
@@ -239,6 +247,8 @@
         
         // Vælg dato
         function selectDate(dateStr, cellElement) {
+            console.log('Dato valgt:', dateStr); // Debug log
+            
             // Fjern tidligere valg
             document.querySelectorAll('.calendar-day.selected').forEach(cell => {
                 cell.classList.remove('selected');
@@ -249,15 +259,26 @@
             selectedDate = dateStr;
             selectedDateInput.value = dateStr;
             
+            console.log('selectedDate sat til:', selectedDate); // Debug log
+            console.log('selectedDateInput.value:', selectedDateInput.value); // Debug log
+            
             // Aktiver submit knap
             submitBtn.disabled = false;
             submitBtn.style.cursor = 'pointer';
+            submitBtn.style.background = '#06290f'; // Sæt grøn farve
+            submitBtn.style.color = 'white';
+            
+            console.log('Submit knap aktiveret:', submitBtn.disabled); // Debug log
             
             // Beregn og opdater pris
             calculateTotalPrice();
             
             // Gem valgt dato i localStorage for at bevare den ved refresh/navigation
             localStorage.setItem('selectedBookingDate', dateStr);
+            
+            // Vis bekræftelse
+            bookingMessage.textContent = `Dato valgt: ${dateStr}`;
+            bookingMessage.className = 'booking-message success';
         }
         
         // Beregn total pris

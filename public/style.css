@@ -731,6 +731,12 @@ body {
   background: #ccc;
   cursor: not-allowed;
   transform: none;
+  opacity: 0.6;
+}
+
+.booking-submit-btn:not(:disabled) {
+  background: #06290f;
+  color: white;
 }
 
 .booking-message {
