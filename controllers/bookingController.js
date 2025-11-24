@@ -171,9 +171,80 @@ async function createBooking(req, res) {
   }
 }
 
+// Opret booking og redirect til betalingsside
+async function createBookingAndRedirect(req, res) {
+  try {
+    const {
+      experienceId,
+      bookingDate,
+      bookingTime,
+      customerName,
+      customerEmail,
+      customerPhone,
+      numberOfParticipants,
+      totalPrice
+    } = req.body;
+    
+    // Validering
+    if (!experienceId || !bookingDate || !customerName || !customerEmail || !numberOfParticipants || !totalPrice) {
+      return res.status(400).send("Alle påkrævede felter skal udfyldes");
+    }
+    
+    // Tjek om datoen stadig er tilgængelig
+    const availability = await bookingModel.checkDateAvailability(experienceId, bookingDate);
+    
+    if (!availability.available || availability.remainingSpots < numberOfParticipants) {
+      return res.status(400).send("Datoen er ikke længere tilgængelig for det antal deltagere");
+    }
+    
+    // Opret booking
+    const booking = await bookingModel.createBooking({
+      experienceId: parseInt(experienceId),
+      bookingDate,
+      bookingTime: bookingTime || null,
+      customerName,
+      customerEmail,
+      customerPhone: customerPhone || null,
+      numberOfParticipants: parseInt(numberOfParticipants),
+      totalPrice: parseFloat(totalPrice),
+      status: "pending"
+    });
+    
+    // Redirect til betalingsside
+    res.redirect(`/payment/${booking.id}`);
+  } catch (err) {
+    console.error("Fejl ved oprettelse af booking:", err);
+    res.status(500).send(`Fejl: ${err.message}`);
+  }
+}
+
+// Vis betalingsside
+async function getPaymentPage(req, res) {
+  try {
+    const bookingId = parseInt(req.params.id);
+    
+    if (!bookingId) {
+      return res.status(400).send("Ugyldig booking ID");
+    }
+    
+    // Hent booking information (kan udvides senere)
+    // For nu viser vi bare en simpel betalingsside
+    
+    res.render("payment", {
+      title: "Betaling",
+      bookingId: bookingId
+    });
+  } catch (err) {
+    console.error("Fejl ved hentning af betalingsside:", err);
+    res.status(500).send(`Fejl: ${err.message}`);
+  }
+}
+
 module.exports = {
   getBookingPage,
   getAvailableDates,
   createBooking,
+  createBookingAndRedirect,
+  getPaymentPage,
 };
 

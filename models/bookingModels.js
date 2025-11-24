@@ -44,19 +44,20 @@ async function checkDateAvailability(experienceId, date) {
   }
 }
 
-// Hent tilgængelige datoer for en oplevelse (næste 60 dage)
+// Hent tilgængelige datoer for en oplevelse (fra 1. december 2025)
 async function getAvailableDates(experienceId) {
   try {
     await poolConnect;
-    const today = new Date();
+    // Start fra 1. december 2025
+    const startDate = new Date('2025-12-01');
     const futureDate = new Date();
-    futureDate.setDate(today.getDate() + 60);
+    futureDate.setDate(startDate.getDate() + 60);
     
-    // Hent alle bookinger for de næste 60 dage
+    // Hent alle bookinger fra 1. december 2025
     const result = await pool
       .request()
       .input("experienceId", sql.Int, experienceId)
-      .input("today", sql.Date, today)
+      .input("startDate", sql.Date, startDate)
       .input("futureDate", sql.Date, futureDate)
       .query(`
         SELECT 
@@ -65,7 +66,7 @@ async function getAvailableDates(experienceId) {
           SUM(number_of_participants) as totalParticipants
         FROM bookings 
         WHERE experience_id = @experienceId 
-        AND booking_date >= @today 
+        AND booking_date >= @startDate 
         AND booking_date <= @futureDate
         AND status != 'cancelled'
         GROUP BY booking_date
@@ -79,22 +80,35 @@ async function getAvailableDates(experienceId) {
       };
     });
     
+    // Datoer der skal have "few seats left" (5., 10., 15., 20., 25. december)
+    const fewSeatsDates = [
+      '2025-12-05',
+      '2025-12-10',
+      '2025-12-15',
+      '2025-12-20',
+      '2025-12-25'
+    ];
+    
     // Generer alle datoer i perioden og tjek tilgængelighed
     const availableDates = [];
     const maxParticipants = 10; // Maks antal deltagere per dato
     
-    for (let d = new Date(today); d <= futureDate; d.setDate(d.getDate() + 1)) {
+    for (let d = new Date(startDate); d <= futureDate; d.setDate(d.getDate() + 1)) {
       const dateStr = d.toISOString().split('T')[0];
       const booking = bookingsByDate[dateStr];
       const bookedCount = booking ? booking.totalParticipants : 0;
       const remainingSpots = maxParticipants - bookedCount;
+      
+      // Tjek om datoen er i fewSeatsDates eller har 3 eller færre pladser
+      const isFewSeatsDate = fewSeatsDates.includes(dateStr);
+      const hasFewSpots = remainingSpots <= 3;
       
       if (remainingSpots > 0) {
         availableDates.push({
           date: dateStr,
           available: true,
           remainingSpots: remainingSpots,
-          fewSpotsLeft: remainingSpots <= 3 // Få pladser tilbage hvis 3 eller færre
+          fewSpotsLeft: isFewSeatsDate || hasFewSpots
         });
       }
     }

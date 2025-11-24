@@ -17,6 +17,7 @@ const CLOUDINARY_VIDEO_PUBLIC_ID = process.env.CLOUDINARY_VIDEO_PUBLIC_ID || "";
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true })); // For form data
 
 // View engine + layouts
 app.set("view engine", "ejs");
@@ -108,6 +109,9 @@ app.get("/details/:id", (req, res) => {
 // Booking-side
 const bookingController = require("./controllers/bookingController");
 app.get("/book/:id", bookingController.getBookingPage);
+
+// Betalingsside
+app.get("/payment/:id", bookingController.getPaymentPage);
 
 // Test-endpoint
 app.get("/status", (req, res) => {
