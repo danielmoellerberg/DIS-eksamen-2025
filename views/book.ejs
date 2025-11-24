@@ -155,6 +155,14 @@
                 if (data.success) {
                     availableDates = data.dates;
                     renderCalendar();
+                    
+                    // Hvis der er en valgt dato, marker den igen efter render
+                    if (selectedDate) {
+                        const selectedCell = calendarGrid.querySelector(`[data-date="${selectedDate}"]`);
+                        if (selectedCell) {
+                            selectedCell.classList.add('selected');
+                        }
+                    }
                 }
             } catch (error) {
                 console.error('Fejl ved hentning af datoer:', error);
@@ -212,6 +220,12 @@
                         }
                         cell.textContent = day;
                         cell.dataset.date = dateStr;
+                        
+                        // Tjek om denne dato er valgt
+                        if (selectedDate === dateStr) {
+                            cell.classList.add('selected');
+                        }
+                        
                         cell.addEventListener('click', () => selectDate(dateStr, cell));
                     } else {
                         cell.className = 'calendar-day unavailable';
@@ -234,8 +248,16 @@
             cellElement.classList.add('selected');
             selectedDate = dateStr;
             selectedDateInput.value = dateStr;
+            
+            // Aktiver submit knap
             submitBtn.disabled = false;
+            submitBtn.style.cursor = 'pointer';
+            
+            // Beregn og opdater pris
             calculateTotalPrice();
+            
+            // Gem valgt dato i localStorage for at bevare den ved refresh/navigation
+            localStorage.setItem('selectedBookingDate', dateStr);
         }
         
         // Beregn total pris
@@ -272,16 +294,44 @@
         
         // Submit booking form - redirect til betalingsside
         bookingForm.addEventListener('submit', (e) => {
-            if (!selectedDate) {
+            if (!selectedDate || !selectedDateInput.value) {
                 e.preventDefault();
                 bookingMessage.textContent = 'Vælg venligst en dato';
                 bookingMessage.className = 'booking-message error';
                 return;
             }
             
+            // Valider at alle påkrævede felter er udfyldt
+            const customerName = document.getElementById('customerName').value.trim();
+            const customerEmail = document.getElementById('customerEmail').value.trim();
+            const numberOfParticipants = parseInt(numberOfParticipantsInput.value);
+            
+            if (!customerName || !customerEmail || !numberOfParticipants || numberOfParticipants < 1) {
+                e.preventDefault();
+                bookingMessage.textContent = 'Udfyld venligst alle påkrævede felter';
+                bookingMessage.className = 'booking-message error';
+                return;
+            }
+            
+            // Opdater totalPrice hidden input før submit
+            const totalPriceHidden = document.getElementById('totalPriceHidden');
+            if (totalPriceHidden) {
+                const total = basePrice * numberOfParticipants;
+                totalPriceHidden.value = total.toFixed(2);
+            }
+            
             // Formen submitter normalt til /api/bookings/create-and-redirect
             // Controlleren håndterer redirect til betalingsside
         });
+        
+        // Gendan valgt dato fra localStorage hvis den findes
+        const savedDate = localStorage.getItem('selectedBookingDate');
+        if (savedDate) {
+            selectedDate = savedDate;
+            selectedDateInput.value = savedDate;
+            submitBtn.disabled = false;
+            submitBtn.style.cursor = 'pointer';
+        }
         
         // Initialiser - vis kalender med det samme, hent data i baggrunden
         renderCalendarPlaceholder();

@@ -1,10 +1,12 @@
 <section class="payment wrapper">
     <div class="payment container">
-        <h1>Betaling</h1>
-        <p>Booking ID: <%= bookingId %></p>
+        <div class="payment-success">
+            <h1>✅ Booking bekræftet!</h1>
+            <p class="booking-id">Booking ID: <strong><%= bookingId %></strong></p>
+        </div>
         
         <div class="payment-info">
-            <p>Din booking er blevet oprettet og er klar til betaling.</p>
+            <p>Din booking er blevet <strong>gemt i databasen</strong> og er klar til betaling.</p>
             <p>Her kan du integrere din betalings-API senere.</p>
         </div>
         
@@ -33,6 +35,22 @@
     font-size: 32px;
     color: #06290f;
     margin-bottom: 20px;
+}
+
+.payment-success {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.booking-id {
+    font-size: 18px;
+    color: #666;
+    margin-top: 10px;
+}
+
+.booking-id strong {
+    color: #06290f;
+    font-size: 20px;
 }
 
 .payment-info {

@@ -123,6 +123,9 @@ async function getAvailableDates(experienceId) {
 async function createBooking(bookingData) {
   try {
     await poolConnect;
+    
+    console.log("Indsætter booking i database med data:", bookingData);
+    
     const result = await pool
       .request()
       .input("experienceId", sql.Int, bookingData.experienceId)
@@ -142,11 +145,21 @@ async function createBooking(bookingData) {
         SELECT SCOPE_IDENTITY() as id;
       `);
     
+    const bookingId = result.recordset[0]?.id;
+    const rowsAffected = result.rowsAffected[0];
+    
+    if (!bookingId) {
+      throw new Error("Booking ID blev ikke returneret fra databasen");
+    }
+    
+    console.log(`✅ Booking gemt i database - ID: ${bookingId}, Rows affected: ${rowsAffected}`);
+    
     return {
-      id: result.recordset[0].id,
-      rowsAffected: result.rowsAffected
+      id: bookingId,
+      rowsAffected: rowsAffected
     };
   } catch (err) {
+    console.error("❌ Database fejl ved oprettelse af booking:", err);
     throw new Error("Fejl ved oprettelse af booking: " + err.message);
   }
 }

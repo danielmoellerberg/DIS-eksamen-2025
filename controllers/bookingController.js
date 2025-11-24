@@ -185,8 +185,18 @@ async function createBookingAndRedirect(req, res) {
       totalPrice
     } = req.body;
     
+    console.log("Booking data modtaget:", {
+      experienceId,
+      bookingDate,
+      customerName,
+      customerEmail,
+      numberOfParticipants,
+      totalPrice
+    });
+    
     // Validering
     if (!experienceId || !bookingDate || !customerName || !customerEmail || !numberOfParticipants || !totalPrice) {
+      console.error("Validering fejlede - manglende felter");
       return res.status(400).send("Alle påkrævede felter skal udfyldes");
     }
     
@@ -194,27 +204,39 @@ async function createBookingAndRedirect(req, res) {
     const availability = await bookingModel.checkDateAvailability(experienceId, bookingDate);
     
     if (!availability.available || availability.remainingSpots < numberOfParticipants) {
+      console.error("Dato ikke tilgængelig:", { availability, numberOfParticipants });
       return res.status(400).send("Datoen er ikke længere tilgængelig for det antal deltagere");
     }
     
-    // Opret booking
-    const booking = await bookingModel.createBooking({
+    // Opret booking i databasen
+    const bookingData = {
       experienceId: parseInt(experienceId),
       bookingDate,
       bookingTime: bookingTime || null,
-      customerName,
-      customerEmail,
-      customerPhone: customerPhone || null,
+      customerName: customerName.trim(),
+      customerEmail: customerEmail.trim(),
+      customerPhone: customerPhone ? customerPhone.trim() : null,
       numberOfParticipants: parseInt(numberOfParticipants),
       totalPrice: parseFloat(totalPrice),
       status: "pending"
-    });
+    };
+    
+    console.log("Opretter booking i database:", bookingData);
+    
+    const booking = await bookingModel.createBooking(bookingData);
+    
+    if (!booking || !booking.id) {
+      throw new Error("Booking blev ikke oprettet korrekt i databasen");
+    }
+    
+    console.log("✅ Booking oprettet succesfuldt i database med ID:", booking.id);
     
     // Redirect til betalingsside
     res.redirect(`/payment/${booking.id}`);
   } catch (err) {
-    console.error("Fejl ved oprettelse af booking:", err);
-    res.status(500).send(`Fejl: ${err.message}`);
+    console.error("❌ Fejl ved oprettelse af booking:", err);
+    console.error("Error stack:", err.stack);
+    res.status(500).send(`Fejl ved oprettelse af booking: ${err.message}`);
   }
 }
 
