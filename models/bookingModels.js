@@ -198,12 +198,26 @@ async function getBookingById(bookingId) {
   }
 }
 
+async function updateBookingStatus(bookingId, status) {
+  try {
+    await ensureConnection();
+    await pool
+      .request()
+      .input("bookingId", sql.Int, bookingId)
+      .input("status", sql.NVarChar, status)
+      .query("UPDATE bookings SET status = @status WHERE id = @bookingId");
+  } catch (err) {
+    throw new Error("Fejl ved opdatering af bookingstatus: " + err.message);
+  }
+}
+
 module.exports = {
   getExperienceById,
   checkDateAvailability,
   getAvailableDates,
   createBooking,
   getBookingById,
+  updateBookingStatus,
   ensureConnection,
   pool,
   sql,

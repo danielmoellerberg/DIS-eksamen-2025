@@ -109,9 +109,9 @@ const bookingController = require("./controllers/bookingController");
 app.get("/book/:id", bookingController.getBookingPage);
 
 // Betalingsside
-app.get("/payment/:id", bookingController.getPaymentPage);
 app.get("/payment/success", bookingController.getPaymentSuccess);
 app.get("/payment/cancel", bookingController.getPaymentCancel);
+app.get("/payment/:id", bookingController.getPaymentPage);
 
 // Test-endpoint
 app.get("/status", (req, res) => {

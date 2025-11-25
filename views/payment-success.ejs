@@ -8,7 +8,11 @@
         </div>
         
         <div class="payment-info">
-            <p>Tak for din betaling! Din booking er nu bekræftet.</p>
+            <% if (errorMessage) { %>
+                <p><%= errorMessage %></p>
+            <% } else { %>
+                <p>Tak for din betaling! Din booking er nu bekræftet.</p>
+            <% } %>
             <% if (booking) { %>
                 <p>Du modtager en bekræftelse på email: <strong><%= booking.customer_email %></strong></p>
             <% } %>

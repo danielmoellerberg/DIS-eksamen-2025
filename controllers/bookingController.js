@@ -1,4 +1,5 @@
 const bookingModel = require("../models/bookingModels");
+const { sendBookingConfirmationEmail } = require("../config/mail");
 
 // Dummy events som fallback (samme som i server.js)
 const demoEvents = [
@@ -368,24 +369,47 @@ async function getPaymentSuccess(req, res) {
   try {
     const bookingId = parseInt(req.query.booking_id);
     const sessionId = req.query.session_id;
-    
+    let booking = null;
+    let errorMessage = null;
+
     if (bookingId) {
-      // Opdater booking status til "confirmed" hvis betalingen er gennemført
-      // (Du kan også verificere med Stripe webhook)
-      const booking = await bookingModel.getBookingById(bookingId);
-      
-      res.render("payment-success", {
-        title: "Betaling gennemført",
-        booking: booking,
-        sessionId: sessionId
-      });
-    } else {
-      res.render("payment-success", {
-        title: "Betaling gennemført",
-        booking: null,
-        sessionId: sessionId
-      });
+      try {
+        booking = await bookingModel.getBookingById(bookingId);
+      } catch (dbErr) {
+        console.error("Kunne ikke hente booking ved success:", dbErr);
+        errorMessage = "Kunne ikke hente booking-information.";
+      }
+
+      if (booking) {
+        try {
+          await bookingModel.updateBookingStatus(bookingId, "confirmed");
+        } catch (statusErr) {
+          console.error("Kunne ikke opdatere bookingstatus:", statusErr.message);
+        }
+
+        try {
+          await sendBookingConfirmationEmail({
+            email: booking.customer_email,
+            name: booking.customer_name,
+            eventTitle: booking.experience_title,
+            eventDate: booking.booking_date
+              ? new Date(booking.booking_date).toLocaleDateString("da-DK")
+              : undefined,
+          });
+        } catch (mailErr) {
+          console.error("Kunne ikke sende bookingbekræftelse:", mailErr.message);
+        }
+      } else if (!errorMessage) {
+        errorMessage = "Booking blev ikke fundet.";
+      }
     }
+
+    res.render("payment-success", {
+      title: "Betaling gennemført",
+      booking,
+      sessionId,
+      errorMessage,
+    });
   } catch (err) {
     console.error("Fejl ved hentning af success-side:", err);
     res.status(500).send(`Fejl: ${err.message}`);
