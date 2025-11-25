@@ -18,12 +18,8 @@ CLOUDINARY_EMBED_URL=https://player.cloudinary.com/embed/?cloud_name=dcgzil7pm&p
 CLOUDINARY_VIDEO_URL=https://eksempel.dk/video.mp4
 CLOUDINARY_VIDEO_POSTER=https://eksempel.dk/poster.jpg
 
-# E-mail (Nodemailer)
-EMAIL_USER=projectdis.app@gmail.com
-EMAIL_PASS=************************
-EMAIL_FROM=Understory Marketplace <projectdis.app@gmail.com>
+# E-mail (MailerSend - kommer snart)
+# EMAIL_USER, EMAIL_PASS og EMAIL_FROM er ikke længere nødvendige
 ```
 
 Hvis `CLOUDINARY_EMBED_URL` er sat, bruges Cloudinary-videoen automatisk (autoplay, muted, loop). Ellers faldes der tilbage til en lokal/video-URL eller ren hero-tekst.
-
-> **Gmail tip:** slå 2FA til og brug et “App password” i stedet for den almindelige adgangskode, så Google ikke blokerer forespørgslerne.

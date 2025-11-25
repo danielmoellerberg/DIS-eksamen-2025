@@ -1,27 +1,12 @@
 const twilio = require("twilio");
-const { transporter, DEFAULT_FROM, sendBookingConfirmationEmail } = require("../config/mail");
+const { sendBookingConfirmationEmail } = require("../config/mail");
 
 // Twilio opsætning
 const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-// Send e-mail notifikation
+
+// Send e-mail notifikation (midlertidigt deaktiveret)
 async function sendEmailNotification(req, res) {
-  const { to, subject, text } = req.body;
-
-  if (!to || !subject || !text) {
-    return res.status(400).json({ error: "Alle felter (to, subject, text) skal udfyldes" });
-  }
-
-  try {
-    await transporter.sendMail({
-      from: DEFAULT_FROM,
-      to,
-      subject,
-      text,
-    });
-    res.status(200).json({ message: "E-mail sendt" });
-  } catch (err) {
-    res.status(500).json({ error: "Fejl ved afsendelse af e-mail: " + err.message });
-  }
+  res.status(503).json({ error: "Mail service ikke konfigureret endnu" });
 }
 
 async function sendBookingConfirmation(req, res) {
@@ -32,13 +17,18 @@ async function sendBookingConfirmation(req, res) {
   }
 
   try {
-    await sendBookingConfirmationEmail({
+    const result = await sendBookingConfirmationEmail({
       email,
       name,
       eventTitle,
       eventDate,
     });
-    res.status(200).json({ message: "Bookingbekræftelse sendt" });
+    
+    if (result.success) {
+      res.status(200).json({ message: "Bookingbekræftelse sendt" });
+    } else {
+      res.status(503).json({ error: "Mail service ikke konfigureret: " + result.error });
+    }
   } catch (error) {
     res.status(500).json({ error: "Kunne ikke sende bookingbekræftelse: " + error.message });
   }
@@ -55,7 +45,7 @@ async function sendSmsNotification(req, res) {
   try {
     await twilioClient.messages.create({
       body: message,
-      from: process.env.TWILIO_PHONE_NUMBER, // Dit Twilio-telefonnummer
+      from: process.env.TWILIO_PHONE_NUMBER,
       to,
     });
     res.status(200).json({ message: "SMS sendt" });

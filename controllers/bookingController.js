@@ -1,5 +1,4 @@
 const bookingModel = require("../models/bookingModels");
-const { sendBookingConfirmationEmail } = require("../config/mail");
 
 // Dummy events som fallback (samme som i server.js)
 const demoEvents = [
@@ -387,18 +386,8 @@ async function getPaymentSuccess(req, res) {
           console.error("Kunne ikke opdatere bookingstatus:", statusErr.message);
         }
 
-        try {
-          await sendBookingConfirmationEmail({
-            email: booking.customer_email,
-            name: booking.customer_name,
-            eventTitle: booking.experience_title,
-            eventDate: booking.booking_date
-              ? new Date(booking.booking_date).toLocaleDateString("da-DK")
-              : undefined,
-          });
-        } catch (mailErr) {
-          console.error("Kunne ikke sende bookingbekræftelse:", mailErr.message);
-        }
+        // Mail-service midlertidigt deaktiveret (MailerSend kommer snart)
+        console.log("📧 Mail ville være sendt til:", booking.customer_email);
       } else if (!errorMessage) {
         errorMessage = "Booking blev ikke fundet.";
       }
