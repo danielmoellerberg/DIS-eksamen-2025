@@ -4,6 +4,7 @@ const dotenv = require("dotenv");
 const cors = require("cors");
 const expressLayouts = require("express-ejs-layouts");
 const session = require("express-session");
+const cron = require("node-cron");
 
 const app = express();
 dotenv.config();
@@ -141,6 +142,7 @@ const notificationRoutes = require("./routes/notificationRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const affiliatePartnerRoutes = require("./routes/affiliatePartnerRoutes");
+const twilioRoutes = require("./routes/twilioRoutes");
 
 app.use("/api/experiences", experiencesRoutes);
 app.use("/api/users", userRoutes);
@@ -149,6 +151,7 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/affiliate", affiliatePartnerRoutes);
+app.use("/api/twilio", twilioRoutes);
 
 // 404 fallback
 app.use((req, res) => {
@@ -160,6 +163,27 @@ app.use((req, res) => {
     res.status(404).send("404 - Siden blev ikke fundet");
   }
 });
+
+// Cron job: Send SMS reminders kl. 9:00 hver dag
+const { sendRemindersForTomorrow } = require("./controllers/notificationController");
+
+// Kør cron job hver dag kl. 9:00
+// Format: sekund minut time dag måned ugedag
+// '0 9 * * *' = kl. 9:00 hver dag
+cron.schedule("0 9 * * *", async () => {
+  console.log("⏰ Cron job kører: Sender SMS reminders for i morgen...");
+  try {
+    const result = await sendRemindersForTomorrow();
+    console.log("📊 Cron job resultat:", result);
+  } catch (error) {
+    console.error("❌ Fejl i cron job:", error);
+  }
+}, {
+  scheduled: true,
+  timezone: "Europe/Copenhagen" // Brug dansk tidzone
+});
+
+console.log("⏰ Cron job opsat: SMS reminders sendes dagligt kl. 9:00 (dansk tid)");
 
 // Start server
 app.listen(PORT, HOST, () => {

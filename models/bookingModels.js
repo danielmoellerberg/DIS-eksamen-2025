@@ -211,6 +211,90 @@ async function updateBookingStatus(bookingId, status) {
   }
 }
 
+// Hent bookinger der skal have SMS reminder (i morgen, ikke sendt endnu, confirmed)
+async function getBookingsForReminder() {
+  try {
+    await ensureConnection();
+    
+    // Find bookinger hvor booking_date = i morgen
+    const result = await pool
+      .request()
+      .query(`
+        SELECT 
+          b.*,
+          e.title as experience_title
+        FROM bookings b
+        INNER JOIN experiences e ON b.experience_id = e.id
+        WHERE b.booking_date = DATEADD(day, 1, CAST(GETDATE() AS DATE))
+          AND b.reminder_sent = 0
+          AND b.status = 'confirmed'
+          AND b.customer_phone IS NOT NULL
+        ORDER BY b.created_at ASC
+      `);
+    
+    return result.recordset;
+  } catch (err) {
+    throw new Error("Fejl ved hentning af bookinger til reminder: " + err.message);
+  }
+}
+
+// Opdater reminder_sent til 1 (SMS er sendt)
+async function updateReminderSent(bookingId) {
+  try {
+    await ensureConnection();
+    await pool
+      .request()
+      .input("bookingId", sql.Int, bookingId)
+      .query("UPDATE bookings SET reminder_sent = 1 WHERE id = @bookingId");
+  } catch (err) {
+    throw new Error("Fejl ved opdatering af reminder_sent: " + err.message);
+  }
+}
+
+// Opdater reminder_response og reminder_response_date
+async function updateReminderResponse(bookingId, response) {
+  try {
+    await ensureConnection();
+    await pool
+      .request()
+      .input("bookingId", sql.Int, bookingId)
+      .input("response", sql.NVarChar, response) // 'yes' eller 'no'
+      .query(`
+        UPDATE bookings 
+        SET reminder_response = @response, 
+            reminder_response_date = GETDATE()
+        WHERE id = @bookingId
+      `);
+  } catch (err) {
+    throw new Error("Fejl ved opdatering af reminder_response: " + err.message);
+  }
+}
+
+// Find seneste aktive booking for et telefonnummer (status = 'confirmed')
+async function findBookingByPhoneNumber(phoneNumber) {
+  try {
+    await ensureConnection();
+    
+    const result = await pool
+      .request()
+      .input("phoneNumber", sql.NVarChar, phoneNumber)
+      .query(`
+        SELECT TOP 1
+          b.*,
+          e.title as experience_title
+        FROM bookings b
+        INNER JOIN experiences e ON b.experience_id = e.id
+        WHERE b.customer_phone = @phoneNumber
+          AND b.status = 'confirmed'
+        ORDER BY b.created_at DESC
+      `);
+    
+    return result.recordset[0] || null;
+  } catch (err) {
+    throw new Error("Fejl ved søgning efter booking: " + err.message);
+  }
+}
+
 module.exports = {
   getExperienceById,
   checkDateAvailability,
@@ -218,6 +302,10 @@ module.exports = {
   createBooking,
   getBookingById,
   updateBookingStatus,
+  getBookingsForReminder,
+  updateReminderSent,
+  updateReminderResponse,
+  findBookingByPhoneNumber,
   ensureConnection,
   pool,
   sql,
