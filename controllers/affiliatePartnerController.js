@@ -1,4 +1,5 @@
 const affiliatePartnerModel = require("../models/affiliatePartnerModels");
+const experienceModel = require("../models/experienceModels");
 
 // Vis registrerings-siden
 function getRegisterPage(req, res) {
@@ -111,7 +112,7 @@ function logout(req, res) {
   });
 }
 
-// Vis dashboard (placeholder - bygges senere)
+// Vis dashboard
 function getDashboard(req, res) {
   if (!req.session.affiliatePartner) {
     return res.redirect("/affiliate/login");
@@ -123,6 +124,139 @@ function getDashboard(req, res) {
   });
 }
 
+// Vis liste over affiliate partners experiences
+async function getExperiences(req, res) {
+  if (!req.session.affiliatePartner) {
+    return res.redirect("/affiliate/login");
+  }
+  
+  try {
+    const experiences = await experienceModel.getExperiencesByPartnerId(req.session.affiliatePartner.id);
+    
+    res.render("affiliateExperiences", {
+      title: "Mine Oplevelser",
+      partner: req.session.affiliatePartner,
+      experiences: experiences,
+      success: req.query.success || null,
+      error: req.query.error || null
+    });
+  } catch (err) {
+    console.error("Fejl ved hentning af experiences:", err);
+    res.render("affiliateExperiences", {
+      title: "Mine Oplevelser",
+      partner: req.session.affiliatePartner,
+      experiences: [],
+      success: null,
+      error: "Kunne ikke hente oplevelser"
+    });
+  }
+}
+
+// Vis formular til at oprette ny experience
+function getCreateExperiencePage(req, res) {
+  if (!req.session.affiliatePartner) {
+    return res.redirect("/affiliate/login");
+  }
+  
+  res.render("affiliateCreateExperience", {
+    title: "Opret Ny Oplevelse",
+    partner: req.session.affiliatePartner,
+    error: null
+  });
+}
+
+// Håndter oprettelse af ny experience
+async function createExperience(req, res) {
+  if (!req.session.affiliatePartner) {
+    return res.redirect("/affiliate/login");
+  }
+  
+  try {
+    const {
+      title,
+      description,
+      location,
+      duration_hours,
+      price_from,
+      category,
+      image_url,
+      date_type,
+      single_date,
+      multiple_dates
+    } = req.body;
+    
+    // Validering
+    if (!title || !description || !location || !duration_hours || !price_from || !category || !date_type) {
+      return res.render("affiliateCreateExperience", {
+        title: "Opret Ny Oplevelse",
+        partner: req.session.affiliatePartner,
+        error: "Alle obligatoriske felter skal udfyldes"
+      });
+    }
+    
+    // Håndter available_dates baseret på date_type
+    let available_dates = null;
+    if (date_type === "single" && single_date) {
+      available_dates = JSON.stringify({ type: "single", date: single_date });
+    } else if (date_type === "multiple" && multiple_dates) {
+      // Split komma-separerede datoer
+      const dates = multiple_dates.split(",").map(d => d.trim()).filter(d => d);
+      available_dates = JSON.stringify({ type: "multiple", dates: dates });
+    } else if (date_type === "always") {
+      available_dates = JSON.stringify({ type: "always" });
+    }
+    
+    // Opret experience
+    const result = await experienceModel.createExperience({
+      title,
+      description,
+      location,
+      duration_hours: parseFloat(duration_hours),
+      price_from: parseFloat(price_from),
+      category,
+      image_url: image_url || null,
+      affiliate_partner_id: req.session.affiliatePartner.id,
+      available_dates: available_dates,
+      status: "active"
+    });
+    
+    console.log("Experience oprettet:", result);
+    
+    // Redirect til liste med success besked
+    res.redirect("/affiliate/experiences?success=Oplevelsen er oprettet!");
+  } catch (err) {
+    console.error("Fejl ved oprettelse af experience:", err);
+    res.render("affiliateCreateExperience", {
+      title: "Opret Ny Oplevelse",
+      partner: req.session.affiliatePartner,
+      error: err.message
+    });
+  }
+}
+
+// Slet en experience
+async function deleteExperience(req, res) {
+  if (!req.session.affiliatePartner) {
+    return res.redirect("/affiliate/login");
+  }
+  
+  try {
+    const experienceId = req.params.id;
+    
+    // Tjek at experience tilhører denne partner
+    const experience = await experienceModel.getExperienceById(experienceId);
+    if (!experience || experience.affiliate_partner_id !== req.session.affiliatePartner.id) {
+      return res.redirect("/affiliate/experiences?error=Du har ikke adgang til denne oplevelse");
+    }
+    
+    await experienceModel.deleteExperience(experienceId);
+    res.redirect("/affiliate/experiences?success=Oplevelsen er slettet");
+  } catch (err) {
+    console.error("Fejl ved sletning af experience:", err);
+    res.redirect("/affiliate/experiences?error=Kunne ikke slette oplevelsen");
+  }
+}
+
 module.exports = {
   getRegisterPage,
   register,
@@ -130,5 +264,9 @@ module.exports = {
   login,
   logout,
   getDashboard,
+  getExperiences,
+  getCreateExperiencePage,
+  createExperience,
+  deleteExperience,
 };
 

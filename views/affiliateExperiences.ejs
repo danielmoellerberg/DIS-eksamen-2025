@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - Understory</title>
+    <link rel="stylesheet" href="/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        .dashboard-container {
+            min-height: 100vh;
+            background: #f4f1e8;
+        }
+
+        .dashboard-header {
+            background: linear-gradient(135deg, #1a5029 0%, #06290f 100%);
+            padding: 24px 48px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .dashboard-header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+
+        .dashboard-nav {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+        }
+
+        .dashboard-nav a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: background 0.3s ease;
+        }
+
+        .dashboard-nav a:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .dashboard-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 48px 24px;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .page-header h2 {
+            color: #06290f;
+            margin: 0;
+        }
+
+        .create-btn {
+            background: #1a5029;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .create-btn:hover {
+            background: #06290f;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(26, 80, 41, 0.4);
+        }
+
+        .success-message {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            border-left: 4px solid #4caf50;
+            margin-bottom: 24px;
+        }
+
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            border-left: 4px solid #c62828;
+            margin-bottom: 24px;
+        }
+
+        .experiences-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 24px;
+        }
+
+        .experience-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .experience-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .experience-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 14px;
+        }
+
+        .experience-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .experience-content {
+            padding: 20px;
+        }
+
+        .experience-title {
+            color: #06290f;
+            font-size: 20px;
+            font-weight: 600;
+            margin: 0 0 8px 0;
+        }
+
+        .experience-category {
+            display: inline-block;
+            background: #1a5029;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-bottom: 12px;
+        }
+
+        .experience-description {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 16px;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .experience-meta {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .experience-actions {
+            display: flex;
+            gap: 12px;
+            padding-top: 16px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .btn-delete {
+            background: #d32f2f;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .btn-delete:hover {
+            background: #b71c1c;
+        }
+
+        .empty-state {
+            background: white;
+            border-radius: 16px;
+            padding: 60px 40px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .empty-state h3 {
+            color: #06290f;
+            font-size: 24px;
+            margin-bottom: 16px;
+        }
+
+        .empty-state p {
+            color: #666;
+            margin-bottom: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <header class="dashboard-header">
+            <h1>🌱 Understory Partner Dashboard</h1>
+            <nav class="dashboard-nav">
+                <a href="/affiliate/dashboard">Dashboard</a>
+                <a href="/affiliate/experiences">Mine Oplevelser</a>
+                <a href="/affiliate/logout" class="logout-btn">Log ud</a>
+            </nav>
+        </header>
+
+        <main class="dashboard-content">
+            <div class="page-header">
+                <h2>Mine Oplevelser</h2>
+                <a href="/affiliate/experiences/create" class="create-btn">+ Opret Ny Oplevelse</a>
+            </div>
+
+            <% if (success) { %>
+                <div class="success-message">
+                    <%= success %>
+                </div>
+            <% } %>
+
+            <% if (error) { %>
+                <div class="error-message">
+                    <%= error %>
+                </div>
+            <% } %>
+
+            <% if (experiences && experiences.length > 0) { %>
+                <div class="experiences-grid">
+                    <% experiences.forEach(exp => { %>
+                        <div class="experience-card">
+                            <div class="experience-image">
+                                <% if (exp.image_url) { %>
+                                    <img src="<%= exp.image_url %>" alt="<%= exp.title %>">
+                                <% } else { %>
+                                    Intet billede
+                                <% } %>
+                            </div>
+                            <div class="experience-content">
+                                <span class="experience-category"><%= exp.category || 'Andet' %></span>
+                                <h3 class="experience-title"><%= exp.title %></h3>
+                                <p class="experience-description"><%= exp.description %></p>
+                                
+                                <div class="experience-meta">
+                                    <div class="meta-item">
+                                        📍 <%= exp.location %>
+                                    </div>
+                                    <div class="meta-item">
+                                        ⏱️ <%= exp.duration_hours %> timer
+                                    </div>
+                                    <div class="meta-item">
+                                        💰 <%= exp.price_from %> kr.
+                                    </div>
+                                </div>
+
+                                <div class="experience-actions">
+                                    <form action="/affiliate/experiences/delete/<%= exp.id %>" method="POST" 
+                                          onsubmit="return confirm('Er du sikker på at du vil slette denne oplevelse?');">
+                                        <button type="submit" class="btn-delete">Slet</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    <% }) %>
+                </div>
+            <% } else { %>
+                <div class="empty-state">
+                    <h3>Ingen oplevelser endnu</h3>
+                    <p>Du har ikke oprettet nogen oplevelser endnu. Kom i gang ved at oprette din første oplevelse!</p>
+                    <a href="/affiliate/experiences/create" class="create-btn">Opret Din Første Oplevelse</a>
+                </div>
+            <% } %>
+        </main>
+    </div>
+</body>
+</html>
+

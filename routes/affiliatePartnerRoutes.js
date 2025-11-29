@@ -28,5 +28,11 @@ router.get("/logout", affiliatePartnerController.logout);
 // Dashboard (beskyttet route)
 router.get("/dashboard", requireAuth, affiliatePartnerController.getDashboard);
 
+// Experience management routes (beskyttede)
+router.get("/experiences", requireAuth, affiliatePartnerController.getExperiences);
+router.get("/experiences/create", requireAuth, affiliatePartnerController.getCreateExperiencePage);
+router.post("/experiences/create", requireAuth, affiliatePartnerController.createExperience);
+router.post("/experiences/delete/:id", requireAuth, affiliatePartnerController.deleteExperience);
+
 module.exports = router;
 
