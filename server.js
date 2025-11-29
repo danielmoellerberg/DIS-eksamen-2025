@@ -110,7 +110,7 @@ async function getExperiencesForFrontend() {
 app.get(["/", "/home"], async (req, res) => {
   try {
     const events = await getExperiencesForFrontend();
-    res.render("index", { title: "Understory Marketplace", events });
+  res.render("index", { title: "Understory Marketplace", events });
   } catch (err) {
     console.error("Fejl ved visning af forside:", err);
     res.render("index", { title: "Understory Marketplace", events: [] });
@@ -121,21 +121,21 @@ app.get(["/", "/home"], async (req, res) => {
 app.get("/details/:id", async (req, res) => {
   try {
     const events = await getExperiencesForFrontend();
-    const event = events.find((ev) => String(ev._id) === req.params.id);
+  const event = events.find((ev) => String(ev._id) === req.params.id);
 
-    if (!event) {
+  if (!event) {
       return res.status(404).render("404", { title: "Event ikke fundet" });
-    }
+  }
 
     const relatedEvents = events
       .filter((ev) => ev._id !== event._id && ev.category === event.category)
       .slice(0, 2);
 
-    res.render("details", {
-      title: event.title,
-      event,
-      relatedEvents,
-    });
+  res.render("details", {
+    title: event.title,
+    event,
+    relatedEvents,
+  });
   } catch (err) {
     console.error("Fejl ved visning af details:", err);
     res.status(500).send("Der opstod en fejl");
@@ -165,6 +165,7 @@ const bookingRoutes = require("./routes/bookingRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const affiliatePartnerRoutes = require("./routes/affiliatePartnerRoutes");
 const twilioRoutes = require("./routes/twilioRoutes");
+const uploadRoutes = require("./routes/uploadRoutes");
 
 app.use("/api/experiences", experiencesRoutes);
 app.use("/api/users", userRoutes);
@@ -174,6 +175,7 @@ app.use("/api/bookings", bookingRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/affiliate", affiliatePartnerRoutes);
 app.use("/api/twilio", twilioRoutes);
+app.use("/api/upload", uploadRoutes);
 
 // 404 fallback
 app.use((req, res) => {

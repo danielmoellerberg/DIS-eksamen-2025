@@ -290,14 +290,24 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="image_url">Billede URL</label>
+                        <label for="image">Billede *</label>
                         <input 
-                            type="url" 
-                            id="image_url" 
-                            name="image_url" 
-                            placeholder="https://example.com/billede.jpg"
+                            type="file" 
+                            id="image" 
+                            name="image" 
+                            accept="image/*"
+                            required
                         >
-                        <span class="form-hint">Indtast URL til et billede (Cloudinary kommer senere)</span>
+                        <span class="form-hint">Upload et billede (max 5MB, jpeg/png/gif/webp)</span>
+                        
+                        <!-- Hidden felt til at gemme Cloudinary URL -->
+                        <input type="hidden" id="image_url" name="image_url">
+                        
+                        <!-- Preview område -->
+                        <div id="image-preview" style="display: none; margin-top: 12px;">
+                            <img id="preview-img" src="" alt="Preview" style="max-width: 300px; max-height: 200px; border-radius: 8px; border: 2px solid #e0e0e0;">
+                            <p id="upload-status" style="margin-top: 8px; font-size: 14px; color: #666;"></p>
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -362,6 +372,68 @@
                 dateInputGroups.forEach(group => group.classList.remove('active'));
                 document.getElementById(`${type === 'single' ? 'single-date' : type === 'multiple' ? 'multiple-dates' : 'always-available'}-input`).classList.add('active');
             });
+        });
+
+        // Håndter billede upload
+        const imageInput = document.getElementById('image');
+        const imageUrlInput = document.getElementById('image_url');
+        const imagePreview = document.getElementById('image-preview');
+        const previewImg = document.getElementById('preview-img');
+        const uploadStatus = document.getElementById('upload-status');
+        const form = document.querySelector('form');
+
+        imageInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            
+            if (!file) return;
+
+            // Vis loading status
+            uploadStatus.textContent = '📤 Uploader billede...';
+            uploadStatus.style.color = '#1a5029';
+            imagePreview.style.display = 'block';
+
+            // Lav preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImg.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+
+            // Upload til Cloudinary via API
+            try {
+                const formData = new FormData();
+                formData.append('image', file);
+
+                const response = await fetch('/api/upload/experience-image', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Gem Cloudinary URL i hidden input
+                    imageUrlInput.value = data.imageUrl;
+                    uploadStatus.textContent = '✅ Billede uploadet!';
+                    uploadStatus.style.color = '#2e7d32';
+                    console.log('Billede URL:', data.imageUrl);
+                } else {
+                    throw new Error(data.error || 'Upload fejlede');
+                }
+            } catch (error) {
+                uploadStatus.textContent = '❌ Upload fejlede: ' + error.message;
+                uploadStatus.style.color = '#c62828';
+                imageUrlInput.value = '';
+            }
+        });
+
+        // Tjek at billede er uploadet før form submission
+        form.addEventListener('submit', (e) => {
+            if (!imageUrlInput.value) {
+                e.preventDefault();
+                alert('Vent venligst på at billedet er uploadet');
+                return false;
+            }
         });
     </script>
 </body>
