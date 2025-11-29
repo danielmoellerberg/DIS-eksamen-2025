@@ -151,36 +151,10 @@ async function sendRemindersForTomorrow() {
   }
 }
 
-// Test endpoint: Manuelt trigger reminder-proces
-async function testSendReminders(req, res) {
-  try {
-    console.log("🧪 Test: Manuelt trigger af reminder-proces...");
-    const result = await sendRemindersForTomorrow();
-    
-    if (result.success) {
-      res.status(200).json({
-        message: "Reminder-proces kørt",
-        result: result
-      });
-    } else {
-      res.status(500).json({
-        error: "Fejl i reminder-proces",
-        details: result
-      });
-    }
-  } catch (error) {
-    console.error("❌ Fejl i test endpoint:", error);
-    res.status(500).json({
-      error: "Fejl ved test af reminder-proces",
-      message: error.message
-    });
-  }
-}
-
 // Hjælpefunktion til at formatere dato (27. december 2025)
 function formatDate(date) {
   if (!date) return "";
-
+  
   const d = new Date(date);
   const day = d.getDate();
   const monthNames = [
@@ -189,7 +163,7 @@ function formatDate(date) {
   ];
   const month = monthNames[d.getMonth()];
   const year = d.getFullYear();
-
+  
   return `${day}. ${month} ${year}`;
 }
 
@@ -199,5 +173,4 @@ module.exports = {
   sendSmsNotification,
   sendBookingReminderSms,
   sendRemindersForTomorrow,
-  testSendReminders,
 };

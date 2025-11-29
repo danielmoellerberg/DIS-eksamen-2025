@@ -11,7 +11,4 @@ router.post("/email/booking-confirmation", notificationController.sendBookingCon
 // Send SMS notifikation
 router.post("/sms", notificationController.sendSmsNotification);
 
-// Test endpoint: Manuelt trigger reminder-proces (kun til test!)
-router.post("/test/reminders", notificationController.testSendReminders);
-
 module.exports = router;
