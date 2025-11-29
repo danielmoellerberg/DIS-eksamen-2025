@@ -5,6 +5,7 @@ const cors = require("cors");
 const expressLayouts = require("express-ejs-layouts");
 const session = require("express-session");
 const cron = require("node-cron");
+const experienceModel = require("./models/experienceModels");
 
 const app = express();
 dotenv.config();
@@ -51,73 +52,94 @@ app.use((req, res, next) => {
   next();
 });
 
-// Dummy events til lokal visning (kan erstattes af data fra DB senere)
-const demoEvents = [
-  {
-    _id: 1,
-    title: "Workshop i keramik",
-    shortDescription: "Lær at dreje og dekorere din egen skål",
-    description: "En hyggelig keramik workshop hvor du lærer grundlæggende teknikker.",
-    image: "https://picsum.photos/600/400?random=1",
-    rating: 4.8,
-    category: "Kreativitet",
-    location: "København",
-    date: "12. marts 2025",
-    duration: "2 timer",
-    price: 450,
-  },
-  {
-    _id: 2,
-    title: "Guidet naturtur",
-    shortDescription: "Udforsk skovens flora og fauna på denne guidede tur",
-    description: "Kom med på en vandretur i naturen med en erfaren guide.",
-    image: "https://picsum.photos/600/400?random=2",
-    rating: 4.5,
-    category: "Natur",
-    location: "Bornholm",
-    date: "20. april 2025",
-    duration: "3 timer",
-    price: 350,
-  },
-  {
-    _id: 3,
-    title: "Madlavningskursus",
-    shortDescription: "Lær at lave italienske retter fra bunden",
-    description: "En lækker madoplevelse med fokus på autentisk italiensk madlavning.",
-    image: "https://picsum.photos/600/400?random=3",
-    rating: 4.7,
-    category: "Mad",
-    location: "Aarhus",
-    date: "5. maj 2025",
-    duration: "4 timer",
-    price: 600,
-  },
-];
-
-const resolveEvents = () => demoEvents;
+// Hent experiences fra database og format til frontend
+async function getExperiencesForFrontend() {
+  try {
+    const experiences = await experienceModel.getAllExperiences();
+    
+    // Filtrer kun aktive experiences
+    const activeExperiences = experiences.filter(exp => exp.status === 'active');
+    
+    // Format til det format frontend forventer
+    return activeExperiences.map(exp => {
+      // Parse available_dates hvis det eksisterer
+      let dateText = "Flere datoer tilgængelige";
+      if (exp.available_dates) {
+        try {
+          const dateInfo = JSON.parse(exp.available_dates);
+          if (dateInfo.type === "single") {
+            dateText = new Date(dateInfo.date).toLocaleDateString('da-DK', { 
+              day: 'numeric', 
+              month: 'long', 
+              year: 'numeric' 
+            });
+          } else if (dateInfo.type === "always") {
+            dateText = "Book når det passer dig";
+          }
+        } catch (e) {
+          // Hvis JSON parse fejler, brug default tekst
+        }
+      }
+      
+      // Lav en kort beskrivelse (første 100 tegn)
+      const shortDescription = exp.description.length > 100 
+        ? exp.description.substring(0, 100) + "..." 
+        : exp.description;
+      
+      return {
+        _id: exp.id,
+        title: exp.title,
+        shortDescription: shortDescription,
+        description: exp.description,
+        image: exp.image_url || "https://picsum.photos/600/400?random=" + exp.id,
+        rating: 4.5, // Default rating (kan tilføjes reviews senere)
+        category: exp.category || "Andet",
+        location: exp.location,
+        date: dateText,
+        duration: exp.duration_hours + " timer",
+        price: exp.price_from,
+      };
+    });
+  } catch (err) {
+    console.error("Fejl ved hentning af experiences:", err);
+    return []; // Returner tom array hvis der er fejl
+  }
+}
 
 // Forside (alias /home)
-app.get(["/", "/home"], (req, res) => {
-  const events = resolveEvents();
-  res.render("index", { title: "Understory Marketplace", events });
+app.get(["/", "/home"], async (req, res) => {
+  try {
+    const events = await getExperiencesForFrontend();
+    res.render("index", { title: "Understory Marketplace", events });
+  } catch (err) {
+    console.error("Fejl ved visning af forside:", err);
+    res.render("index", { title: "Understory Marketplace", events: [] });
+  }
 });
 
 // Details-side med anbefalinger
-app.get("/details/:id", (req, res) => {
-  const events = resolveEvents();
-  const event = events.find((ev) => String(ev._id) === req.params.id);
+app.get("/details/:id", async (req, res) => {
+  try {
+    const events = await getExperiencesForFrontend();
+    const event = events.find((ev) => String(ev._id) === req.params.id);
 
-  if (!event) {
-    return res.status(404).send("Event blev ikke fundet");
+    if (!event) {
+      return res.status(404).render("404", { title: "Event ikke fundet" });
+    }
+
+    const relatedEvents = events
+      .filter((ev) => ev._id !== event._id && ev.category === event.category)
+      .slice(0, 2);
+
+    res.render("details", {
+      title: event.title,
+      event,
+      relatedEvents,
+    });
+  } catch (err) {
+    console.error("Fejl ved visning af details:", err);
+    res.status(500).send("Der opstod en fejl");
   }
-
-  const relatedEvents = events.filter((ev) => ev._id !== event._id).slice(0, 2);
-
-  res.render("details", {
-    title: event.title,
-    event,
-    relatedEvents,
-  });
 });
 
 // Booking-side
