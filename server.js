@@ -3,6 +3,7 @@ const path = require("path");
 const dotenv = require("dotenv");
 const cors = require("cors");
 const expressLayouts = require("express-ejs-layouts");
+const session = require("express-session");
 
 const app = express();
 dotenv.config();
@@ -17,6 +18,20 @@ const CLOUDINARY_EMBED_URL = process.env.CLOUDINARY_EMBED_URL || "";
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // For form data
+
+// Session middleware
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "understory-secret-key-change-in-production",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === "production", // true i produktion (HTTPS)
+      httpOnly: true,
+      maxAge: 1000 * 60 * 60 * 24, // 24 timer
+    },
+  })
+);
 
 // View engine + layouts
 app.set("view engine", "ejs");
@@ -125,6 +140,7 @@ const adminRoutes = require("./routes/adminRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
+const affiliatePartnerRoutes = require("./routes/affiliatePartnerRoutes");
 
 app.use("/api/experiences", experiencesRoutes);
 app.use("/api/users", userRoutes);
@@ -132,6 +148,7 @@ app.use("/api/admins", adminRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/payment", paymentRoutes);
+app.use("/affiliate", affiliatePartnerRoutes);
 
 // 404 fallback
 app.use((req, res) => {

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - Understory</title>
+    <link rel="stylesheet" href="/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        .dashboard-container {
+            min-height: 100vh;
+            background: #f4f1e8;
+        }
+
+        .dashboard-header {
+            background: linear-gradient(135deg, #1a5029 0%, #06290f 100%);
+            padding: 24px 48px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .dashboard-header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+
+        .dashboard-nav {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+        }
+
+        .dashboard-nav a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: background 0.3s ease;
+        }
+
+        .dashboard-nav a:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .dashboard-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 48px 24px;
+        }
+
+        .welcome-card {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            margin-bottom: 32px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .welcome-card h2 {
+            color: #06290f;
+            margin-top: 0;
+            margin-bottom: 12px;
+        }
+
+        .welcome-card p {
+            color: #666;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-top: 32px;
+        }
+
+        .info-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .info-card h3 {
+            color: #1a5029;
+            margin-top: 0;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .info-card p {
+            color: #666;
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .cta-section {
+            background: linear-gradient(135deg, #1a5029 0%, #06290f 100%);
+            color: white;
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+            margin-top: 32px;
+        }
+
+        .cta-section h3 {
+            margin-top: 0;
+            margin-bottom: 16px;
+            font-size: 24px;
+        }
+
+        .cta-section p {
+            margin-bottom: 24px;
+            opacity: 0.9;
+        }
+
+        .cta-btn {
+            background: #f1ff67;
+            color: #06290f;
+            padding: 14px 32px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+
+        .cta-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(241, 255, 103, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <header class="dashboard-header">
+            <h1>🌱 Understory Partner Dashboard</h1>
+            <nav class="dashboard-nav">
+                <a href="/affiliate/dashboard">Dashboard</a>
+                <a href="/affiliate/experiences">Mine Oplevelser</a>
+                <a href="/affiliate/logout" class="logout-btn">Log ud</a>
+            </nav>
+        </header>
+
+        <main class="dashboard-content">
+            <div class="welcome-card">
+                <h2>Velkommen, <%= partner.name %>! 👋</h2>
+                <p>
+                    Du er nu logget ind som affiliate partner på Understory. 
+                    Herfra kan du administrere dine oplevelser og se statistikker.
+                </p>
+            </div>
+
+            <div class="info-grid">
+                <div class="info-card">
+                    <h3>📧 Email</h3>
+                    <p><%= partner.email %></p>
+                </div>
+
+                <div class="info-card">
+                    <h3>🌐 Website</h3>
+                    <p><%= partner.website_url || 'Ikke angivet' %></p>
+                </div>
+
+                <div class="info-card">
+                    <h3>🎯 Status</h3>
+                    <p>Aktiv partner</p>
+                </div>
+            </div>
+
+            <div class="cta-section">
+                <h3>Klar til at oprette din første oplevelse?</h3>
+                <p>Del dine unikke oplevelser med kunder på Understory Marketplace</p>
+                <a href="#" class="cta-btn">Opret oplevelse (kommer snart)</a>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
+
