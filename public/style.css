@@ -814,3 +814,68 @@ body {
 .error-link:hover {
   background: #c4d84b;
 }
+
+/* -------------------------------------------------------------------------- */
+/* OM OS SEKTION */
+/* -------------------------------------------------------------------------- */
+
+.about-section {
+  padding: 80px 24px;
+  background: white;
+  margin-top: 60px;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+}
+
+.about-content {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.about-content h2 {
+  color: #06290f;
+  font-size: 42px;
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+.about-text {
+  font-size: 18px;
+  line-height: 1.8;
+  color: #333;
+}
+
+.about-text p {
+  margin-bottom: 24px;
+}
+
+.understory-link {
+  color: #1a5029;
+  font-weight: 600;
+  text-decoration: underline;
+  transition: color 0.2s ease;
+}
+
+.understory-link:hover {
+  color: #06290f;
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+@media (max-width: 768px) {
+  .about-section {
+    padding: 60px 20px;
+    margin-top: 40px;
+  }
+  
+  .about-content h2 {
+    font-size: 32px;
+  }
+  
+  .about-text {
+    font-size: 16px;
+  }
+}
