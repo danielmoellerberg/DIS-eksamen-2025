@@ -38,27 +38,22 @@
 
     <div class="categories grid">
         <a href="#" class="category card" data-category="Workshop">
-            <img src="https://images.unsplash.com/photo-1581091012184-5c1fbd1b060b" alt="Workshop">
             <span>Workshops</span>
         </a>
 
         <a href="#" class="category card" data-category="Guidet tur">
-            <img src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee" alt="Guidet tur">
             <span>Guidede ture</span>
         </a>
 
         <a href="#" class="category card" data-category="Natur">
-            <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e" alt="Natur">
             <span>Natur</span>
         </a>
 
         <a href="#" class="category card" data-category="Mad">
-            <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836" alt="Mad">
             <span>Madoplevelser</span>
         </a>
 
         <a href="#" class="category card" data-category="Kreativitet">
-            <img src="https://images.unsplash.com/photo-1529101091764-c3526daf38fe" alt="Kreativitet">
             <span>Kreativitet</span>
         </a>
     </div>
@@ -85,7 +80,7 @@
 <section id="explore" class="event grid">
     <% if (events && events.length > 0) { %>
         <% events.forEach(event => { %>
-            <div class="event card">
+            <div class="event card" data-category="<%= event.category || 'Andet' %>">
                 <div class="event image">
                     <!-- Kategori badge -->
                     <span class="event badge">

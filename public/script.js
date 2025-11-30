@@ -8,23 +8,55 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let activeCategory = "Alle";
 
+  // Kategori mapping - map visningsnavn til database kategori
+  const categoryMap = {
+    "Workshops": "Workshop",
+    "Guidede ture": "Guidet tur",
+    "Natur": "Natur",
+    "Madoplevelser": "Mad",
+    "Kreativitet": "Kreativitet"
+  };
+
   function applyFilters() {
       const searchValue = searchInput ? searchInput.value.toLowerCase() : "";
 
       cards.forEach(card => {
           const title = card.querySelector("h3").textContent.toLowerCase();
           const description = card.querySelector("p").textContent.toLowerCase();
+          const cardCategory = card.dataset.category || "";
 
           const matchesSearch =
               title.includes(searchValue) ||
               description.includes(searchValue);
 
-          const matchesCategory =
-              activeCategory === "Alle" ||
-              description.includes(activeCategory);
+          let matchesCategory = true;
+          if (activeCategory !== "Alle") {
+              // Map visningsnavn til database kategori
+              const dbCategory = categoryMap[activeCategory] || activeCategory;
+              matchesCategory = cardCategory === dbCategory;
+          }
 
           card.style.display = (matchesSearch && matchesCategory) ? "block" : "none";
       });
+
+      // Vis "Ingen events fundet" besked hvis ingen kort er synlige
+      const visibleCards = Array.from(cards).filter(card => card.style.display !== "none");
+      const noResultsMessage = document.querySelector(".no-results-message");
+      
+      if (visibleCards.length === 0 && cards.length > 0) {
+          if (!noResultsMessage) {
+              const exploreSection = document.getElementById("explore");
+              const message = document.createElement("p");
+              message.className = "no-results-message";
+              message.style.textAlign = "center";
+              message.style.padding = "40px";
+              message.style.color = "#666";
+              message.textContent = "Ingen oplevelser fundet for denne kategori.";
+              exploreSection.appendChild(message);
+          }
+      } else if (noResultsMessage) {
+          noResultsMessage.remove();
+      }
   }
 
   if (searchInput) {
@@ -33,28 +65,65 @@ document.addEventListener("DOMContentLoaded", () => {
 
   chips.forEach(chip => {
       chip.addEventListener("click", () => {
-
           chips.forEach(c => c.classList.remove("active"));
           chip.classList.add("active");
 
-          activeCategory = chip.dataset.category;
+          const chipCategory = chip.dataset.category;
+          activeCategory = chipCategory === "Alle" ? "Alle" : chipCategory;
+
+          // Opdater kategori kort
+          categoryCards.forEach(c => c.classList.remove("active"));
+          if (chipCategory !== "Alle") {
+              categoryCards.forEach(c => {
+                  const cardCategory = c.dataset.category;
+                  const cardText = c.querySelector("span").textContent.trim();
+                  const mappedCategory = categoryMap[cardText] || cardText;
+                  if (cardCategory === chipCategory || mappedCategory === chipCategory) {
+                      c.classList.add("active");
+                  }
+              });
+          }
+
+          // Scroll ned til oplevelserne
+          const exploreSection = document.getElementById("explore");
+          if (exploreSection) {
+              exploreSection.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+
           applyFilters();
       });
   });
 
   categoryCards.forEach(card => {
-      card.addEventListener("click", () => {
+      card.addEventListener("click", (e) => {
+          e.preventDefault();
 
           const cat = card.dataset.category;
+          const categoryText = card.querySelector("span").textContent.trim();
 
+          // Opdater active kategori
+          activeCategory = categoryText;
+
+          // Opdater chips
           chips.forEach(c => c.classList.remove("active"));
           chips.forEach(c => {
-              if (c.dataset.category === cat) {
+              const chipCategory = c.dataset.category;
+              const mappedCategory = categoryMap[categoryText] || categoryText;
+              if (chipCategory === mappedCategory || chipCategory === categoryText) {
                   c.classList.add("active");
               }
           });
 
-          activeCategory = cat;
+          // Highlight aktiv kategori kort
+          categoryCards.forEach(c => c.classList.remove("active"));
+          card.classList.add("active");
+
+          // Scroll ned til oplevelserne
+          const exploreSection = document.getElementById("explore");
+          if (exploreSection) {
+              exploreSection.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+
           applyFilters();
       });
   });

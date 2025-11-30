@@ -275,6 +275,71 @@
         .btn-delete:hover {
             background: #b71c1c;
         }
+
+        .bookings-section {
+            margin-top: 60px;
+        }
+
+        .bookings-section h2 {
+            color: #06290f;
+            margin-bottom: 24px;
+        }
+
+        .bookings-table {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .bookings-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .bookings-table th {
+            background: #1a5029;
+            color: white;
+            padding: 16px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .bookings-table td {
+            padding: 16px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .bookings-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .bookings-table tr:hover {
+            background: #f5f5f5;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-confirmed {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status-pending {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .status-cancelled {
+            background: #ffebee;
+            color: #c62828;
+        }
     </style>
 </head>
 <body>
@@ -380,6 +445,59 @@
                     </div>
                 </section>
             <% } %>
+
+            <!-- BOOKINGS OVERSIGT -->
+            <section class="bookings-section">
+                <h2>📅 Bookinger</h2>
+                
+                <% if (bookings && bookings.length > 0) { %>
+                    <div class="bookings-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Oplevelse</th>
+                                    <th>Kunde</th>
+                                    <th>Email</th>
+                                    <th>Telefon</th>
+                                    <th>Dato</th>
+                                    <th>Deltagere</th>
+                                    <th>Pris</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% bookings.forEach(booking => { %>
+                                    <tr>
+                                        <td><strong><%= booking.experience_title %></strong></td>
+                                        <td><%= booking.customer_name %></td>
+                                        <td><%= booking.customer_email %></td>
+                                        <td><%= booking.customer_phone || '-' %></td>
+                                        <td><%= new Date(booking.booking_date).toLocaleDateString('da-DK') %></td>
+                                        <td><%= booking.number_of_participants %></td>
+                                        <td><%= booking.total_price %> kr.</td>
+                                        <td>
+                                            <% if (booking.status === 'confirmed') { %>
+                                                <span class="status-badge status-confirmed">Bekræftet</span>
+                                            <% } else if (booking.status === 'pending') { %>
+                                                <span class="status-badge status-pending">Afventer</span>
+                                            <% } else if (booking.status === 'cancelled') { %>
+                                                <span class="status-badge status-cancelled">Annulleret</span>
+                                            <% } else { %>
+                                                <span class="status-badge"><%= booking.status %></span>
+                                            <% } %>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                    </div>
+                <% } else { %>
+                    <div class="empty-state">
+                        <h3>Ingen bookinger endnu</h3>
+                        <p>Når folk booker dine oplevelser, vil de vises her.</p>
+                    </div>
+                <% } %>
+            </section>
         </main>
     </div>
 </body>

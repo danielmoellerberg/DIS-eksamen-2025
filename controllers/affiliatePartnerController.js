@@ -122,11 +122,13 @@ async function getDashboard(req, res) {
   try {
     const experiences = await experienceModel.getExperiencesByPartnerId(req.session.affiliatePartner.id);
     const statistics = await bookingModel.getPartnerStatistics(req.session.affiliatePartner.id);
+    const bookings = await bookingModel.getBookingsByPartner(req.session.affiliatePartner.id);
     
     res.render("affiliateDashboard", {
       title: "Dashboard",
       partner: req.session.affiliatePartner,
       experiences: experiences || [],
+      bookings: bookings || [],
       statistics: statistics,
       success: req.query.success || null,
       error: req.query.error || null
@@ -137,6 +139,7 @@ async function getDashboard(req, res) {
       title: "Dashboard",
       partner: req.session.affiliatePartner,
       experiences: [],
+      bookings: [],
       statistics: { activeExperiences: 0, totalBookings: 0, totalRevenue: 0 },
       success: null,
       error: null
