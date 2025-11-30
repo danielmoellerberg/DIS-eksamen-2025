@@ -121,51 +121,37 @@ async function getDashboard(req, res) {
   
   try {
     const experiences = await experienceModel.getExperiencesByPartnerId(req.session.affiliatePartner.id);
+    const statistics = await bookingModel.getPartnerStatistics(req.session.affiliatePartner.id);
     
     res.render("affiliateDashboard", {
       title: "Dashboard",
       partner: req.session.affiliatePartner,
-      experiences: experiences || []
-    });
-  } catch (err) {
-    console.error("Fejl ved hentning af experiences:", err);
-    res.render("affiliateDashboard", {
-      title: "Dashboard",
-      partner: req.session.affiliatePartner,
-      experiences: []
-    });
-  }
-}
-
-// Vis liste over affiliate partners experiences
-async function getExperiences(req, res) {
-  if (!req.session.affiliatePartner) {
-    return res.redirect("/affiliate/login");
-  }
-  
-  try {
-    const experiences = await experienceModel.getExperiencesByPartnerId(req.session.affiliatePartner.id);
-    const bookings = await bookingModel.getBookingsByPartner(req.session.affiliatePartner.id);
-    
-    res.render("affiliateExperiences", {
-      title: "Mine Oplevelser",
-      partner: req.session.affiliatePartner,
-      experiences: experiences,
-      bookings: bookings,
+      experiences: experiences || [],
+      statistics: statistics,
       success: req.query.success || null,
       error: req.query.error || null
     });
   } catch (err) {
     console.error("Fejl ved hentning af experiences:", err);
-    res.render("affiliateExperiences", {
-      title: "Mine Oplevelser",
+    res.render("affiliateDashboard", {
+      title: "Dashboard",
       partner: req.session.affiliatePartner,
       experiences: [],
-      bookings: [],
+      statistics: { activeExperiences: 0, totalBookings: 0, totalRevenue: 0 },
       success: null,
-      error: "Kunne ikke hente oplevelser"
+      error: null
     });
   }
+}
+
+// Vis liste over affiliate partners experiences (redirecter nu til dashboard)
+async function getExperiences(req, res) {
+  if (!req.session.affiliatePartner) {
+    return res.redirect("/affiliate/login");
+  }
+  
+  // Redirect til dashboard i stedet - alle oplevelser vises der nu
+  res.redirect("/affiliate/dashboard");
 }
 
 // Vis formular til at oprette ny experience
@@ -238,8 +224,8 @@ async function createExperience(req, res) {
     
     console.log("Experience oprettet:", result);
     
-    // Redirect til liste med success besked
-    res.redirect("/affiliate/experiences?success=Oplevelsen er oprettet!");
+    // Redirect til dashboard med success besked
+    res.redirect("/affiliate/dashboard?success=Oplevelsen er oprettet!");
   } catch (err) {
     console.error("Fejl ved oprettelse af experience:", err);
     res.render("affiliateCreateExperience", {
@@ -261,7 +247,7 @@ async function getEditExperiencePage(req, res) {
     const experience = await experienceModel.getExperienceById(experienceId);
     
     if (!experience || experience.affiliate_partner_id !== req.session.affiliatePartner.id) {
-      return res.redirect("/affiliate/experiences?error=Du har ikke adgang til denne oplevelse");
+      return res.redirect("/affiliate/dashboard?error=Du har ikke adgang til denne oplevelse");
     }
     
     res.render("affiliateEditExperience", {
@@ -272,7 +258,7 @@ async function getEditExperiencePage(req, res) {
     });
   } catch (err) {
     console.error("Fejl ved hentning af experience:", err);
-    res.redirect("/affiliate/experiences?error=Kunne ikke hente oplevelsen");
+    res.redirect("/affiliate/dashboard?error=Kunne ikke hente oplevelsen");
   }
 }
 
@@ -287,7 +273,7 @@ async function updateExperience(req, res) {
     const experience = await experienceModel.getExperienceById(experienceId);
     
     if (!experience || experience.affiliate_partner_id !== req.session.affiliatePartner.id) {
-      return res.redirect("/affiliate/experiences?error=Du har ikke adgang til denne oplevelse");
+      return res.redirect("/affiliate/dashboard?error=Du har ikke adgang til denne oplevelse");
     }
     
     const {
@@ -337,7 +323,7 @@ async function updateExperience(req, res) {
       status: "active"
     });
     
-    res.redirect("/affiliate/experiences?success=Oplevelsen er opdateret!");
+    res.redirect("/affiliate/dashboard?success=Oplevelsen er opdateret!");
   } catch (err) {
     console.error("Fejl ved opdatering af experience:", err);
     const experience = await experienceModel.getExperienceById(req.params.id);
@@ -362,14 +348,14 @@ async function deleteExperience(req, res) {
     // Tjek at experience tilhører denne partner
     const experience = await experienceModel.getExperienceById(experienceId);
     if (!experience || experience.affiliate_partner_id !== req.session.affiliatePartner.id) {
-      return res.redirect("/affiliate/experiences?error=Du har ikke adgang til denne oplevelse");
+      return res.redirect("/affiliate/dashboard?error=Du har ikke adgang til denne oplevelse");
     }
     
     await experienceModel.deleteExperience(experienceId);
-    res.redirect("/affiliate/experiences?success=Oplevelsen er slettet");
+    res.redirect("/affiliate/dashboard?success=Oplevelsen er slettet");
   } catch (err) {
     console.error("Fejl ved sletning af experience:", err);
-    res.redirect("/affiliate/experiences?error=Kunne ikke slette oplevelsen");
+    res.redirect("/affiliate/dashboard?error=Kunne ikke slette oplevelsen");
   }
 }
 

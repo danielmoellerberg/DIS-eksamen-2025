@@ -29,7 +29,10 @@ router.get("/logout", affiliatePartnerController.logout);
 router.get("/dashboard", requireAuth, affiliatePartnerController.getDashboard);
 
 // Experience management routes (beskyttede)
-router.get("/experiences", requireAuth, affiliatePartnerController.getExperiences);
+// Redirect /experiences til dashboard (da oplevelser nu vises der)
+router.get("/experiences", requireAuth, (req, res) => {
+  res.redirect("/affiliate/dashboard");
+});
 router.get("/experiences/create", requireAuth, affiliatePartnerController.getCreateExperiencePage);
 router.post("/experiences/create", requireAuth, affiliatePartnerController.createExperience);
 router.get("/experiences/edit/:id", requireAuth, affiliatePartnerController.getEditExperiencePage);

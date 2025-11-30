@@ -320,6 +320,44 @@ async function getBookingsByPartner(partnerId) {
   }
 }
 
+// Hent statistikker for en affiliate partner
+async function getPartnerStatistics(partnerId) {
+  try {
+    await ensureConnection();
+    
+    const result = await pool
+      .request()
+      .input("partnerId", sql.Int, partnerId)
+      .query(`
+        SELECT 
+          (SELECT COUNT(*) 
+           FROM experiences 
+           WHERE affiliate_partner_id = @partnerId 
+           AND status = 'active') as active_experiences,
+          
+          (SELECT COUNT(*) 
+           FROM bookings b
+           INNER JOIN experiences e ON b.experience_id = e.id
+           WHERE e.affiliate_partner_id = @partnerId
+           AND b.status != 'cancelled') as total_bookings,
+          
+          (SELECT ISNULL(SUM(b.total_price), 0)
+           FROM bookings b
+           INNER JOIN experiences e ON b.experience_id = e.id
+           WHERE e.affiliate_partner_id = @partnerId
+           AND b.status != 'cancelled') as total_revenue
+      `);
+    
+    return {
+      activeExperiences: result.recordset[0].active_experiences || 0,
+      totalBookings: result.recordset[0].total_bookings || 0,
+      totalRevenue: parseFloat(result.recordset[0].total_revenue) || 0
+    };
+  } catch (err) {
+    throw new Error("Fejl ved hentning af statistikker: " + err.message);
+  }
+}
+
 module.exports = {
   getExperienceById,
   checkDateAvailability,
@@ -332,6 +370,7 @@ module.exports = {
   updateReminderResponse,
   findBookingByPhoneNumber,
   getBookingsByPartner,
+  getPartnerStatistics,
   ensureConnection,
   pool,
   sql,
