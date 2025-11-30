@@ -114,15 +114,27 @@ function logout(req, res) {
 }
 
 // Vis dashboard
-function getDashboard(req, res) {
+async function getDashboard(req, res) {
   if (!req.session.affiliatePartner) {
     return res.redirect("/affiliate/login");
   }
   
-  res.render("affiliateDashboard", {
-    title: "Dashboard",
-    partner: req.session.affiliatePartner
-  });
+  try {
+    const experiences = await experienceModel.getExperiencesByPartnerId(req.session.affiliatePartner.id);
+    
+    res.render("affiliateDashboard", {
+      title: "Dashboard",
+      partner: req.session.affiliatePartner,
+      experiences: experiences || []
+    });
+  } catch (err) {
+    console.error("Fejl ved hentning af experiences:", err);
+    res.render("affiliateDashboard", {
+      title: "Dashboard",
+      partner: req.session.affiliatePartner,
+      experiences: []
+    });
+  }
 }
 
 // Vis liste over affiliate partners experiences

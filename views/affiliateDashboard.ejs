@@ -17,14 +17,9 @@
             padding: 24px 48px;
             color: white;
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-end;
             align-items: center;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .dashboard-header h1 {
-            margin: 0;
-            font-size: 28px;
         }
 
         .dashboard-nav {
@@ -146,12 +141,145 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(241, 255, 103, 0.4);
         }
+
+        .experiences-section {
+            margin-top: 60px;
+        }
+
+        .experiences-section h2 {
+            color: #06290f;
+            margin-bottom: 32px;
+        }
+
+        .experiences-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 24px;
+        }
+
+        .experience-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .experience-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .experience-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 14px;
+        }
+
+        .experience-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .experience-content {
+            padding: 20px;
+        }
+
+        .experience-title {
+            color: #06290f;
+            font-size: 20px;
+            font-weight: 600;
+            margin: 0 0 8px 0;
+        }
+
+        .experience-category {
+            display: inline-block;
+            background: #1a5029;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-bottom: 12px;
+        }
+
+        .experience-description {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 16px;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .experience-meta {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .experience-actions {
+            display: flex;
+            gap: 12px;
+            padding-top: 16px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .btn-edit {
+            background: #1976d2;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-edit:hover {
+            background: #1565c0;
+        }
+
+        .btn-delete {
+            background: #d32f2f;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .btn-delete:hover {
+            background: #b71c1c;
+        }
     </style>
 </head>
 <body>
     <div class="dashboard-container">
         <header class="dashboard-header">
-            <h1>🌱 Understory Partner Dashboard</h1>
             <nav class="dashboard-nav">
                 <a href="/affiliate/logout" class="logout-btn">Log ud</a>
             </nav>
@@ -188,6 +316,52 @@
                 <p>Del dine unikke oplevelser med kunder på Understory Marketplace</p>
                 <a href="/affiliate/experiences/create" class="cta-btn">Opret Oplevelse</a>
             </div>
+
+            <!-- MINE OPLEVELSER -->
+            <% if (experiences && experiences.length > 0) { %>
+                <section class="experiences-section">
+                    <h2>Mine Oplevelser</h2>
+                    <div class="experiences-grid">
+                        <% experiences.forEach(exp => { %>
+                            <div class="experience-card">
+                                <div class="experience-image">
+                                    <% if (exp.image_url) { %>
+                                        <img src="<%= exp.image_url %>" alt="<%= exp.title %>">
+                                    <% } else { %>
+                                        Intet billede
+                                    <% } %>
+                                </div>
+                                <div class="experience-content">
+                                    <span class="experience-category"><%= exp.category || 'Andet' %></span>
+                                    <h3 class="experience-title"><%= exp.title %></h3>
+                                    <p class="experience-description"><%= exp.description %></p>
+                                    
+                                    <div class="experience-meta">
+                                        <div class="meta-item">
+                                            📍 <%= exp.location %>
+                                        </div>
+                                        <div class="meta-item">
+                                            ⏱️ <%= exp.duration_hours %> timer
+                                        </div>
+                                        <div class="meta-item">
+                                            💰 <%= exp.price_from %> kr.
+                                        </div>
+                                    </div>
+
+                                    <div class="experience-actions">
+                                        <a href="/affiliate/experiences/edit/<%= exp.id %>" class="btn-edit">✏️ Rediger</a>
+                                        <form action="/affiliate/experiences/delete/<%= exp.id %>" method="POST" 
+                                              onsubmit="return confirm('Er du sikker på at du vil slette denne oplevelse?');" 
+                                              style="display: inline;">
+                                            <button type="submit" class="btn-delete">🗑️ Slet</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        <% }) %>
+                    </div>
+                </section>
+            <% } %>
         </main>
     </div>
 </body>
