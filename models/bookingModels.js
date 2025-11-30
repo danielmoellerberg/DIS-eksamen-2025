@@ -295,6 +295,31 @@ async function findBookingByPhoneNumber(phoneNumber) {
   }
 }
 
+// Hent alle bookinger for en affiliate partners experiences
+async function getBookingsByPartner(partnerId) {
+  try {
+    await ensureConnection();
+    
+    const result = await pool
+      .request()
+      .input("partnerId", sql.Int, partnerId)
+      .query(`
+        SELECT 
+          b.*,
+          e.title as experience_title,
+          e.location as experience_location
+        FROM bookings b
+        INNER JOIN experiences e ON b.experience_id = e.id
+        WHERE e.affiliate_partner_id = @partnerId
+        ORDER BY b.booking_date DESC, b.created_at DESC
+      `);
+    
+    return result.recordset;
+  } catch (err) {
+    throw new Error("Fejl ved hentning af partner bookinger: " + err.message);
+  }
+}
+
 module.exports = {
   getExperienceById,
   checkDateAvailability,
@@ -306,6 +331,7 @@ module.exports = {
   updateReminderSent,
   updateReminderResponse,
   findBookingByPhoneNumber,
+  getBookingsByPartner,
   ensureConnection,
   pool,
   sql,

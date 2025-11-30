@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - Understory</title>
+    <link rel="stylesheet" href="/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        .dashboard-container {
+            min-height: 100vh;
+            background: #f4f1e8;
+        }
+
+        .dashboard-header {
+            background: linear-gradient(135deg, #1a5029 0%, #06290f 100%);
+            padding: 24px 48px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .dashboard-header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+
+        .dashboard-nav {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+        }
+
+        .dashboard-nav a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: background 0.3s ease;
+        }
+
+        .dashboard-nav a:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .dashboard-content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 48px 24px;
+        }
+
+        .form-card {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .form-card h2 {
+            color: #06290f;
+            margin-top: 0;
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #06290f;
+            font-weight: 500;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #1a5029;
+            box-shadow: 0 0 0 3px rgba(26, 80, 41, 0.1);
+        }
+
+        .form-hint {
+            color: #666;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            border-left: 4px solid #c62828;
+            margin-bottom: 24px;
+        }
+
+        .submit-btn {
+            background: #1a5029;
+            color: white;
+            padding: 16px 32px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .submit-btn:hover {
+            background: #06290f;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(26, 80, 41, 0.4);
+        }
+
+        .back-link {
+            display: inline-block;
+            color: #1a5029;
+            text-decoration: none;
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .date-type-selector {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .date-type-btn {
+            padding: 10px 20px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .date-type-btn.active {
+            background: #1a5029;
+            color: white;
+            border-color: #1a5029;
+        }
+
+        .date-input-group {
+            display: none;
+        }
+
+        .date-input-group.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <header class="dashboard-header">
+            <h1>🌱 Understory Partner Dashboard</h1>
+            <nav class="dashboard-nav">
+                <a href="/affiliate/dashboard">Dashboard</a>
+                <a href="/affiliate/experiences">Mine Oplevelser</a>
+                <a href="/affiliate/logout" class="logout-btn">Log ud</a>
+            </nav>
+        </header>
+
+        <main class="dashboard-content">
+            <a href="/affiliate/experiences" class="back-link">← Tilbage til oversigt</a>
+
+            <div class="form-card">
+                <h2>Rediger Oplevelse</h2>
+
+                <% if (error) { %>
+                    <div class="error-message">
+                        <%= error %>
+                    </div>
+                <% } %>
+
+                <form action="/affiliate/experiences/edit/<%= experience.id %>" method="POST">
+                    <div class="form-group">
+                        <label for="title">Titel *</label>
+                        <input 
+                            type="text" 
+                            id="title" 
+                            name="title" 
+                            required 
+                            placeholder="F.eks. Workshop i keramik"
+                            value="<%= experience.title %>"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Beskrivelse *</label>
+                        <textarea 
+                            id="description" 
+                            name="description" 
+                            required 
+                            placeholder="Beskriv din oplevelse i detaljer..."
+                        ><%= experience.description %></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="location">Lokation *</label>
+                            <input 
+                                type="text" 
+                                id="location" 
+                                name="location" 
+                                required 
+                                placeholder="F.eks. København"
+                                value="<%= experience.location %>"
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="category">Kategori *</label>
+                            <select id="category" name="category" required>
+                                <option value="">Vælg kategori</option>
+                                <option value="Workshop" <%= experience.category === 'Workshop' ? 'selected' : '' %>>Workshop</option>
+                                <option value="Guidet tur" <%= experience.category === 'Guidet tur' ? 'selected' : '' %>>Guidet tur</option>
+                                <option value="Natur" <%= experience.category === 'Natur' ? 'selected' : '' %>>Natur</option>
+                                <option value="Mad" <%= experience.category === 'Mad' ? 'selected' : '' %>>Mad</option>
+                                <option value="Kreativitet" <%= experience.category === 'Kreativitet' ? 'selected' : '' %>>Kreativitet</option>
+                                <option value="Andet" <%= experience.category === 'Andet' ? 'selected' : '' %>>Andet</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="duration_hours">Varighed (timer) *</label>
+                            <input 
+                                type="number" 
+                                id="duration_hours" 
+                                name="duration_hours" 
+                                step="0.5" 
+                                min="0.5" 
+                                required 
+                                placeholder="F.eks. 2.5"
+                                value="<%= experience.duration_hours %>"
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="price_from">Pris (kr.) *</label>
+                            <input 
+                                type="number" 
+                                id="price_from" 
+                                name="price_from" 
+                                step="0.01" 
+                                min="0" 
+                                required 
+                                placeholder="F.eks. 450"
+                                value="<%= experience.price_from %>"
+                            >
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="image">Billede</label>
+                        <input 
+                            type="file" 
+                            id="image" 
+                            name="image" 
+                            accept="image/*"
+                        >
+                        <span class="form-hint">Upload et nyt billede (max 5MB) - behold eksisterende hvis ikke uploadet</span>
+                        
+                        <!-- Hidden felt til at gemme Cloudinary URL -->
+                        <input type="hidden" id="image_url" name="image_url" value="<%= experience.image_url %>">
+                        
+                        <!-- Vis eksisterende billede -->
+                        <% if (experience.image_url) { %>
+                            <div style="margin-top: 12px;">
+                                <p style="font-size: 14px; color: #666;">Nuværende billede:</p>
+                                <img src="<%= experience.image_url %>" alt="Nuværende" style="max-width: 300px; max-height: 200px; border-radius: 8px; border: 2px solid #e0e0e0;">
+                            </div>
+                        <% } %>
+                        
+                        <!-- Preview område for nyt billede -->
+                        <div id="image-preview" style="display: none; margin-top: 12px;">
+                            <p style="font-size: 14px; color: #666;">Nyt billede:</p>
+                            <img id="preview-img" src="" alt="Preview" style="max-width: 300px; max-height: 200px; border-radius: 8px; border: 2px solid #e0e0e0;">
+                            <p id="upload-status" style="margin-top: 8px; font-size: 14px; color: #666;"></p>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Tilgængelighed *</label>
+                        <div class="date-type-selector">
+                            <button type="button" class="date-type-btn" data-type="single">Enkelt dato</button>
+                            <button type="button" class="date-type-btn" data-type="multiple">Flere datoer</button>
+                            <button type="button" class="date-type-btn active" data-type="always">Altid tilgængelig</button>
+                        </div>
+                        <input type="hidden" id="date_type" name="date_type" value="always">
+
+                        <div class="date-input-group" id="single-date-input">
+                            <input 
+                                type="date" 
+                                id="single_date" 
+                                name="single_date"
+                            >
+                            <span class="form-hint">Vælg en specifik dato</span>
+                        </div>
+
+                        <div class="date-input-group" id="multiple-dates-input">
+                            <input 
+                                type="text" 
+                                id="multiple_dates" 
+                                name="multiple_dates"
+                                placeholder="2025-01-15, 2025-01-22, 2025-01-29"
+                            >
+                            <span class="form-hint">Indtast datoer adskilt med komma (YYYY-MM-DD format)</span>
+                        </div>
+
+                        <div class="date-input-group active" id="always-available-input">
+                            <span class="form-hint">Oplevelsen kan bookes når som helst</span>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="submit-btn">
+                        Gem Ændringer
+                    </button>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Håndter dato-type valg
+        const dateTypeBtns = document.querySelectorAll('.date-type-btn');
+        const dateTypeInput = document.getElementById('date_type');
+        const dateInputGroups = document.querySelectorAll('.date-input-group');
+
+        dateTypeBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const type = btn.dataset.type;
+                
+                // Opdater aktiv knap
+                dateTypeBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                // Opdater hidden input
+                dateTypeInput.value = type;
+                
+                // Vis/skjul relevante input felter
+                dateInputGroups.forEach(group => group.classList.remove('active'));
+                document.getElementById(`${type === 'single' ? 'single-date' : type === 'multiple' ? 'multiple-dates' : 'always-available'}-input`).classList.add('active');
+            });
+        });
+
+        // Håndter billede upload
+        const imageInput = document.getElementById('image');
+        const imageUrlInput = document.getElementById('image_url');
+        const imagePreview = document.getElementById('image-preview');
+        const previewImg = document.getElementById('preview-img');
+        const uploadStatus = document.getElementById('upload-status');
+        const form = document.querySelector('form');
+
+        imageInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            
+            if (!file) return;
+
+            // Vis loading status
+            uploadStatus.textContent = '📤 Uploader billede...';
+            uploadStatus.style.color = '#1a5029';
+            imagePreview.style.display = 'block';
+
+            // Lav preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImg.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+
+            // Upload til Cloudinary via API
+            try {
+                const formData = new FormData();
+                formData.append('image', file);
+
+                const response = await fetch('/api/upload/experience-image', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Gem Cloudinary URL i hidden input
+                    imageUrlInput.value = data.imageUrl;
+                    uploadStatus.textContent = '✅ Billede uploadet!';
+                    uploadStatus.style.color = '#2e7d32';
+                    console.log('Billede URL:', data.imageUrl);
+                } else {
+                    throw new Error(data.error || 'Upload fejlede');
+                }
+            } catch (error) {
+                uploadStatus.textContent = '❌ Upload fejlede: ' + error.message;
+                uploadStatus.style.color = '#c62828';
+                imageUrlInput.value = '';
+            }
+        });
+
+        // Tilllad submit selv uden nyt billede (brug eksisterende)
+        form.addEventListener('submit', (e) => {
+            // Kun tjek hvis der er valgt en ny fil
+            if (imageInput.files && imageInput.files.length > 0) {
+                if (!imageUrlInput.value) {
+                    e.preventDefault();
+                    alert('Vent venligst på at billedet er uploadet');
+                    return false;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
+

@@ -1,5 +1,6 @@
 const affiliatePartnerModel = require("../models/affiliatePartnerModels");
 const experienceModel = require("../models/experienceModels");
+const bookingModel = require("../models/bookingModels");
 
 // Vis registrerings-siden
 function getRegisterPage(req, res) {
@@ -132,11 +133,13 @@ async function getExperiences(req, res) {
   
   try {
     const experiences = await experienceModel.getExperiencesByPartnerId(req.session.affiliatePartner.id);
+    const bookings = await bookingModel.getBookingsByPartner(req.session.affiliatePartner.id);
     
     res.render("affiliateExperiences", {
       title: "Mine Oplevelser",
       partner: req.session.affiliatePartner,
       experiences: experiences,
+      bookings: bookings,
       success: req.query.success || null,
       error: req.query.error || null
     });
@@ -146,6 +149,7 @@ async function getExperiences(req, res) {
       title: "Mine Oplevelser",
       partner: req.session.affiliatePartner,
       experiences: [],
+      bookings: [],
       success: null,
       error: "Kunne ikke hente oplevelser"
     });
@@ -234,6 +238,106 @@ async function createExperience(req, res) {
   }
 }
 
+// Vis edit experience page
+async function getEditExperiencePage(req, res) {
+  if (!req.session.affiliatePartner) {
+    return res.redirect("/affiliate/login");
+  }
+  
+  try {
+    const experienceId = req.params.id;
+    const experience = await experienceModel.getExperienceById(experienceId);
+    
+    if (!experience || experience.affiliate_partner_id !== req.session.affiliatePartner.id) {
+      return res.redirect("/affiliate/experiences?error=Du har ikke adgang til denne oplevelse");
+    }
+    
+    res.render("affiliateEditExperience", {
+      title: "Rediger Oplevelse",
+      partner: req.session.affiliatePartner,
+      experience: experience,
+      error: null
+    });
+  } catch (err) {
+    console.error("Fejl ved hentning af experience:", err);
+    res.redirect("/affiliate/experiences?error=Kunne ikke hente oplevelsen");
+  }
+}
+
+// Opdater en experience
+async function updateExperience(req, res) {
+  if (!req.session.affiliatePartner) {
+    return res.redirect("/affiliate/login");
+  }
+  
+  try {
+    const experienceId = req.params.id;
+    const experience = await experienceModel.getExperienceById(experienceId);
+    
+    if (!experience || experience.affiliate_partner_id !== req.session.affiliatePartner.id) {
+      return res.redirect("/affiliate/experiences?error=Du har ikke adgang til denne oplevelse");
+    }
+    
+    const {
+      title,
+      description,
+      location,
+      duration_hours,
+      price_from,
+      category,
+      image_url,
+      date_type,
+      single_date,
+      multiple_dates
+    } = req.body;
+    
+    // Validering
+    if (!title || !description || !location || !duration_hours || !price_from || !category || !date_type) {
+      return res.render("affiliateEditExperience", {
+        title: "Rediger Oplevelse",
+        partner: req.session.affiliatePartner,
+        experience: experience,
+        error: "Alle obligatoriske felter skal udfyldes"
+      });
+    }
+    
+    // Håndter available_dates
+    let available_dates = experience.available_dates; // Behold eksisterende hvis ikke ændret
+    if (date_type === "single" && single_date) {
+      available_dates = JSON.stringify({ type: "single", date: single_date });
+    } else if (date_type === "multiple" && multiple_dates) {
+      const dates = multiple_dates.split(",").map(d => d.trim()).filter(d => d);
+      available_dates = JSON.stringify({ type: "multiple", dates: dates });
+    } else if (date_type === "always") {
+      available_dates = JSON.stringify({ type: "always" });
+    }
+    
+    // Opdater experience
+    await experienceModel.updateExperience(experienceId, {
+      title,
+      description,
+      location,
+      duration_hours: parseFloat(duration_hours),
+      price_from: parseFloat(price_from),
+      category,
+      image_url: image_url || experience.image_url,
+      available_dates: available_dates,
+      status: "active"
+    });
+    
+    res.redirect("/affiliate/experiences?success=Oplevelsen er opdateret!");
+  } catch (err) {
+    console.error("Fejl ved opdatering af experience:", err);
+    const experience = await experienceModel.getExperienceById(req.params.id);
+    res.render("affiliateEditExperience", {
+      title: "Rediger Oplevelse",
+      partner: req.session.affiliatePartner,
+      experience: experience,
+      error: err.message
+    });
+  }
+}
+
 // Slet en experience
 async function deleteExperience(req, res) {
   if (!req.session.affiliatePartner) {
@@ -267,6 +371,8 @@ module.exports = {
   getExperiences,
   getCreateExperiencePage,
   createExperience,
+  getEditExperiencePage,
+  updateExperience,
   deleteExperience,
 };
 

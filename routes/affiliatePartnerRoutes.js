@@ -32,6 +32,8 @@ router.get("/dashboard", requireAuth, affiliatePartnerController.getDashboard);
 router.get("/experiences", requireAuth, affiliatePartnerController.getExperiences);
 router.get("/experiences/create", requireAuth, affiliatePartnerController.getCreateExperiencePage);
 router.post("/experiences/create", requireAuth, affiliatePartnerController.createExperience);
+router.get("/experiences/edit/:id", requireAuth, affiliatePartnerController.getEditExperiencePage);
+router.post("/experiences/edit/:id", requireAuth, affiliatePartnerController.updateExperience);
 router.post("/experiences/delete/:id", requireAuth, affiliatePartnerController.deleteExperience);
 
 module.exports = router;
