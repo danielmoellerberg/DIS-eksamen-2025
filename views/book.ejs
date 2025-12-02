@@ -56,7 +56,17 @@
                 
                 <div class="form-group">
                     <label for="customerPhone">Telefon</label>
-                    <input type="tel" id="customerPhone" name="customerPhone">
+                    <div style="display: flex; gap: 8px;">
+                        <select id="countryCode" style="width: 80px; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            <option value="+45" selected>+45</option>
+                            <option value="+47">+47</option>
+                            <option value="+46">+46</option>
+                            <option value="+49">+49</option>
+                            <option value="+1">+1</option>
+                        </select>
+                        <input type="tel" id="customerPhone" name="customerPhone" placeholder="12345678" style="flex: 1;">
+                    </div>
+                    <small style="color: #666; font-size: 12px;">Vi sender SMS-reminder 24 timer før booking</small>
                 </div>
                 
                 <div class="form-group">
@@ -345,6 +355,31 @@
         // Opdater pris når antal deltagere ændres
         numberOfParticipantsInput.addEventListener('change', calculateTotalPrice);
         
+        // Normaliser telefonnummer - tilføj landekode hvis mangler
+        function normalizePhoneNumber(phone, countryCode) {
+            if (!phone) return null;
+            
+            // Fjern alle mellemrum og specialtegn
+            let cleaned = phone.replace(/\s+/g, "").replace(/[^\d+]/g, "");
+            
+            // Hvis nummeret allerede starter med +, brug det
+            if (cleaned.startsWith("+")) {
+                return cleaned;
+            }
+            
+            // Hvis nummeret starter med 0, fjern 0 og tilføj landekode
+            if (cleaned.startsWith("0")) {
+                cleaned = cleaned.substring(1);
+            }
+            
+            // Tilføj landekode hvis nummeret ikke har en
+            if (!cleaned.startsWith("+")) {
+                cleaned = countryCode + cleaned;
+            }
+            
+            return cleaned;
+        }
+        
         // Submit booking form - redirect til betalingsside
         bookingForm.addEventListener('submit', (e) => {
             if (!selectedDate || !selectedDateInput.value) {
@@ -358,12 +393,21 @@
             const customerName = document.getElementById('customerName').value.trim();
             const customerEmail = document.getElementById('customerEmail').value.trim();
             const numberOfParticipants = parseInt(numberOfParticipantsInput.value);
+            const customerPhoneInput = document.getElementById('customerPhone');
+            const countryCodeSelect = document.getElementById('countryCode');
             
             if (!customerName || !customerEmail || !numberOfParticipants || numberOfParticipants < 1) {
                 e.preventDefault();
                 bookingMessage.textContent = 'Udfyld venligst alle påkrævede felter';
                 bookingMessage.className = 'booking-message error';
                 return;
+            }
+            
+            // Normaliser telefonnummer hvis det er udfyldt
+            if (customerPhoneInput && customerPhoneInput.value.trim()) {
+                const countryCode = countryCodeSelect ? countryCodeSelect.value : '+45';
+                const normalizedPhone = normalizePhoneNumber(customerPhoneInput.value.trim(), countryCode);
+                customerPhoneInput.value = normalizedPhone;
             }
             
             // Opdater totalPrice hidden input før submit

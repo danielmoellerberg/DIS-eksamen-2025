@@ -305,6 +305,20 @@ async function createBookingAndRedirect(req, res) {
       return res.status(400).send("Datoen er ikke længere tilgængelig for det antal deltagere");
     }
     
+    // Normaliser telefonnummer hvis det er udfyldt
+    let normalizedPhone = null;
+    if (customerPhone && customerPhone.trim()) {
+      const phone = customerPhone.trim();
+      // Hvis nummeret ikke starter med +, tilføj +45 (dansk standard)
+      if (!phone.startsWith("+")) {
+        // Fjern 0 foran hvis det starter med 0
+        const cleaned = phone.replace(/^0+/, "");
+        normalizedPhone = "+45" + cleaned;
+      } else {
+        normalizedPhone = phone;
+      }
+    }
+    
     // Opret booking i databasen (brug det rigtige database ID)
     const bookingData = {
       experienceId: experience.id,
@@ -312,7 +326,7 @@ async function createBookingAndRedirect(req, res) {
       bookingTime: bookingTime || null,
       customerName: customerName.trim(),
       customerEmail: customerEmail.trim(),
-      customerPhone: customerPhone ? customerPhone.trim() : null,
+      customerPhone: normalizedPhone,
       numberOfParticipants: parseInt(numberOfParticipants),
       totalPrice: parseFloat(totalPrice),
       status: "pending"
