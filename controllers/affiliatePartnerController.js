@@ -1,6 +1,9 @@
 const affiliatePartnerModel = require("../models/affiliatePartnerModels");
 const experienceModel = require("../models/experienceModels");
 const bookingModel = require("../models/bookingModels");
+const jwt = require('jsonwebtoken');
+
+const JWT_SECRET = process.env.JWT_SECRET || 'understory-jwt-secret';
 
 // Vis registrerings-siden
 function getRegisterPage(req, res) {
@@ -81,21 +84,53 @@ async function login(req, res) {
     
     // Validering
     if (!email || !password) {
+      // Tjek om det er en JSON request (fra fetch) eller form submission
+      if (req.headers['content-type']?.includes('application/json')) {
+        return res.status(400).json({ error: "Email og adgangskode skal udfyldes" });
+      }
       return res.render("affiliateLogin", {
         title: "Affiliate Partner Login",
         error: "Email og adgangskode skal udfyldes"
       });
     }
     
-    // Login bruger
+    // Login bruger (password verificeres med bcrypt i model)
     const partner = await affiliatePartnerModel.loginAffiliatePartner(email, password);
     
     // Gem i session
     req.session.affiliatePartner = partner;
     
-    // Redirect til dashboard
+    // Tjek om det er en JSON request (fra fetch) eller form submission
+    if (req.headers['content-type']?.includes('application/json')) {
+      // Generer JWT token
+      const payload = {
+        sub: `partner:${partner.id}`,
+        email: partner.email,
+        name: partner.name,
+        role: 'affiliate'
+      };
+      
+      const token = jwt.sign(payload, JWT_SECRET, {
+        algorithm: 'HS256',
+        expiresIn: '24h',
+        issuer: 'understory-marketplace'
+      });
+      
+      // Returner JSON med token
+      return res.status(200).json({
+        message: "Login succesfuldt",
+        partner: { id: partner.id, name: partner.name, email: partner.email },
+        token
+      });
+    }
+    
+    // Ellers redirect til dashboard (form submission)
     res.redirect("/affiliate/dashboard");
   } catch (err) {
+    // Tjek om det er en JSON request
+    if (req.headers['content-type']?.includes('application/json')) {
+      return res.status(401).json({ error: err.message });
+    }
     res.render("affiliateLogin", {
       title: "Affiliate Partner Login",
       error: err.message
