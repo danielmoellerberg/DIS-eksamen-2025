@@ -5,6 +5,11 @@
  * Dette implementerer den hybrid tilgang beskrevet i projektbeskrivelsen:
  * - Session cookies for webbaserede komponenter
  * - JWT tokens for API-orienterede komponenter
+ * 
+ * Sikkerhedsforanstaltninger implementeret med fokus på modstandsdygtighed mod:
+ * - Session hijacking: JWT tokens i Authorization header (ikke i cookies)
+ * - XSS: httpOnly cookies, JWT tokens ikke i localStorage
+ * - CSRF: sameSite cookies, JWT tokens i Authorization header (ikke automatisk sendt)
  */
 
 const jwt = require('jsonwebtoken');

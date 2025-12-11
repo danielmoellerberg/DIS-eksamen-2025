@@ -45,21 +45,42 @@ Dette dokument beskriver de ændringer der er lavet for at implementere hybrid a
 
 ## 🔒 Sikkerhedsaspekter
 
+**Autentifikation i applikationslaget er en velkendt angrebsflade, og valget af teknologier og sikkerhedsprincipper blev derfor truffet med fokus på modstandsdygtighed overfor trusler som session hijacking, XSS og CSRF.**
+
+### Modstandsdygtighed mod Session Hijacking
+- ✅ `httpOnly: true` - Forhindrer at JavaScript kan læse cookies (beskytter mod session hijacking via XSS)
+- ✅ `secure: true` i produktion - Kun HTTPS, forhindrer man-in-the-middle angreb
+- ✅ JWT tokens sendes i Authorization header (ikke i cookies) - reducerer risiko for session hijacking
+- ✅ Session secret fra environment variable (ikke hardcoded)
+
+### Modstandsdygtighed mod XSS (Cross-Site Scripting)
+- ✅ `httpOnly: true` - Cookies kan ikke læses af JavaScript, selv ved XSS angreb
+- ✅ Helmet Content Security Policy (CSP) - Begrænser hvilke scripts der kan køre
+- ✅ JWT tokens i Authorization header (ikke i localStorage) - reducerer XSS risiko
+- ✅ Input validation i controllers
+
+### Modstandsdygtighed mod CSRF (Cross-Site Request Forgery)
+- ✅ `sameSite: "strict"` - Cookies sendes kun ved same-site requests
+- ✅ JWT tokens i Authorization header er ikke sårbare overfor CSRF (cookies sendes ikke automatisk)
+- ✅ Rate limiting - Begrænser antal requests per IP
+
 ### Session Cookies
 - ✅ `httpOnly: true` - Forhindrer XSS angreb
 - ✅ `sameSite: "strict"` - Forhindrer CSRF angreb
-- ✅ `secure: true` i produktion - Kun HTTPS
+- ✅ `secure: true` i produktion - Kun HTTPS (beskytter mod session hijacking)
 
 ### JWT Tokens
 - ✅ HS256 algoritme (symmetrisk)
 - ✅ Issuer validation (`understory-marketplace`)
 - ✅ Expiration time (24 timer for users/affiliate, 1 time for admin)
 - ✅ Secret fra environment variable
+- ✅ Sendes i Authorization header (ikke i cookies) - reducerer risiko for session hijacking og CSRF
 
 ### Hybrid Approach
 - ✅ Sessions til webbaserede komponenter (form submissions, redirects)
 - ✅ JWT tokens til API-orienterede komponenter (fetch requests)
 - ✅ Middleware prioriterer JWT hvis begge er til stede (API-first)
+- ✅ Kombinationen giver bedre sikkerhed end kun én metode
 
 ## ⚠️ Potentielle problemer og løsninger
 

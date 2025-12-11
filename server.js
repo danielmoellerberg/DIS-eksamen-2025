@@ -38,7 +38,9 @@ const limiter = rateLimit({
 
 // Middleware
 app.use(cors());
-// Helmet med tilpasset Content Security Policy (tillader Cloudinary, Stripe, etc.)
+// Helmet med tilpasset Content Security Policy
+// CSP beskytter mod XSS angreb ved at begrænse hvilke scripts og ressourcer der kan indlæses
+// Tillader Cloudinary, Stripe, etc. for funktionalitet, men begrænser ellers til 'self'
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -65,15 +67,19 @@ app.use(express.urlencoded({ extended: true })); // For form data
 app.use(cookieParser()); // Parse cookies
 
 // Session middleware
+// Sikkerhedsforanstaltninger implementeret med fokus på modstandsdygtighed mod:
+// - Session hijacking: httpOnly + secure cookies, JWT tokens i Authorization header
+// - XSS (Cross-Site Scripting): httpOnly cookies, Helmet CSP, JWT tokens ikke i localStorage
+// - CSRF (Cross-Site Request Forgery): sameSite: strict, JWT tokens i Authorization header
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "understory-secret-key-change-in-production",
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: process.env.NODE_ENV === "production", // true i produktion (HTTPS)
-      httpOnly: true, // Forhindrer client-side JS fra at tilgå cookie
-      sameSite: "strict", // Forhindrer Cross-Site Request Forgery (CSRF)
+      secure: process.env.NODE_ENV === "production", // true i produktion (HTTPS) - beskytter mod session hijacking
+      httpOnly: true, // Forhindrer client-side JS fra at tilgå cookie - beskytter mod XSS
+      sameSite: "strict", // Forhindrer Cross-Site Request Forgery (CSRF) - beskytter mod CSRF
       maxAge: 1000 * 60 * 60 * 24, // 24 timer
     },
   })
