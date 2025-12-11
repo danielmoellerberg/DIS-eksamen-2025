@@ -3,7 +3,7 @@ const experienceModel = require("../models/experienceModels");
 const bookingModel = require("../models/bookingModels");
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'understory-jwt-secret';
+const JWT_SECRET = process.env.JWT_SECRET || process.env.SESSION_SECRET || 'understory-jwt-secret';
 
 // Vis registrerings-siden
 function getRegisterPage(req, res) {

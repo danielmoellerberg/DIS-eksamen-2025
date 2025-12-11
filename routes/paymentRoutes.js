@@ -8,6 +8,8 @@ const stripeWebhookController = require("../controllers/stripeWebhookController"
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 // Opret Stripe checkout session
+// NOTE: Offentlig endpoint - booking ID valideres i stedet for authentication
+// Dette er sikkert fordi booking allerede er oprettet og kun booking ID er nødvendigt
 router.post("/create-checkout-session", async (req, res) => {
   try {
     const { bookingId } = req.body;

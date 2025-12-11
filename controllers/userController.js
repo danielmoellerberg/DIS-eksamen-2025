@@ -1,5 +1,9 @@
 const userModel = require("../models/userModels");
 const { sendBookingConfirmationEmail } = require("../config/mail");
+const jwt = require('jsonwebtoken');
+require('dotenv').config();
+
+const JWT_SECRET = process.env.JWT_SECRET || process.env.SESSION_SECRET || 'understory-jwt-secret';
 
 // Hent alle brugere
 async function getAllUsers(req, res) {
@@ -49,16 +53,31 @@ async function loginUser(req, res) {
     // Password verificeres med bcrypt i userModel.loginUser()
     const user = await userModel.loginUser(email, password);
 
-    // Gem bruger i session
+    // Gem bruger i session (for web-baserede komponenter)
     req.session.user = {
       id: user.id,
       name: user.name,
       email: user.email,
     };
 
+    // Generer JWT token (for API-orienterede komponenter)
+    const payload = {
+      sub: `user:${user.id}`,
+      email: user.email,
+      name: user.name,
+      role: 'user'
+    };
+
+    const token = jwt.sign(payload, JWT_SECRET, {
+      algorithm: 'HS256',
+      expiresIn: '24h',
+      issuer: 'understory-marketplace'
+    });
+
     res.status(200).json({ 
       message: "Login succesfuldt", 
-      user: { id: user.id, name: user.name, email: user.email }
+      user: { id: user.id, name: user.name, email: user.email },
+      token // JWT token for API-brug
     });
   } catch (err) {
     res.status(401).json({ error: err.message });

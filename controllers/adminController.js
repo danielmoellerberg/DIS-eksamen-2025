@@ -2,7 +2,7 @@ const adminModel = require("../models/adminModels");
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
-const JWT_SECRET = process.env.JWT_SECRET || 'understory-jwt-secret';
+const JWT_SECRET = process.env.JWT_SECRET || process.env.SESSION_SECRET || 'understory-jwt-secret';
 
 // Hent alle admin-brugere
 async function getAllAdmins(req, res) {
