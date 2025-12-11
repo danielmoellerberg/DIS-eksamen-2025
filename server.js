@@ -1,14 +1,23 @@
 const express = require("express");
+// Express 5 har indbygget async error handling - ingen ekstra pakke nødvendig!
 const path = require("path");
 const dotenv = require("dotenv");
 const cors = require("cors");
 const expressLayouts = require("express-ejs-layouts");
 const session = require("express-session");
+const cookieParser = require("cookie-parser");
+const morgan = require("morgan");
+const responseTime = require("response-time");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
 const cron = require("node-cron");
 const experienceModel = require("./models/experienceModels");
 
 const app = express();
 dotenv.config();
+
+// Trust proxy (nødvendig når app kører bag Nginx)
+app.set("trust proxy", 1);
 
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || "0.0.0.0";
@@ -16,10 +25,28 @@ const CLOUDINARY_VIDEO_URL = process.env.CLOUDINARY_VIDEO_URL || "";
 const CLOUDINARY_VIDEO_POSTER = process.env.CLOUDINARY_VIDEO_POSTER || "";
 const CLOUDINARY_EMBED_URL = process.env.CLOUDINARY_EMBED_URL || "";
 
+// Rate limiting - beskytter mod DoS-angreb
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutter
+  max: 200, // Maks 200 requests per IP per 15 minutter
+  message: {
+    error: "For mange forespørgsler fra denne IP. Prøv igen om 15 minutter.",
+  },
+  standardHeaders: true, // Returnerer rate limit info i headers
+  legacyHeaders: false, // Deaktiverer X-RateLimit-* headers
+});
+
 // Middleware
 app.use(cors());
+app.use(helmet()); // HTTP header-sikkerhed (XSS, clickjacking, MIME-sniffing osv.)
+app.use(limiter); // Rate limiting (DoS-beskyttelse)
+app.use(morgan("dev")); // HTTP request logging
+app.use(responseTime((req, res, time) => {
+  console.log(`⏱️  ${req.method} ${req.originalUrl} - ${time.toFixed(2)}ms`);
+})); // Måler og logger serverresponstid
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // For form data
+app.use(cookieParser()); // Parse cookies
 
 // Session middleware
 app.use(
@@ -29,11 +56,22 @@ app.use(
     saveUninitialized: false,
     cookie: {
       secure: process.env.NODE_ENV === "production", // true i produktion (HTTPS)
-      httpOnly: true,
+      httpOnly: true, // Forhindrer client-side JS fra at tilgå cookie
+      sameSite: "strict", // Forhindrer Cross-Site Request Forgery (CSRF)
       maxAge: 1000 * 60 * 60 * 24, // 24 timer
     },
   })
 );
+
+// HTTP request logging middleware (detaljeret logging)
+app.use((req, res, next) => {
+  console.log("----- HTTP Request -----");
+  console.log("method:", req.method);
+  console.log("url:", req.originalUrl);
+  console.log("ip:", req.ip);
+  console.log("------------------------");
+  next();
+});
 
 // View engine + layouts
 app.set("view engine", "ejs");
@@ -176,6 +214,16 @@ app.use("/api/payment", paymentRoutes);
 app.use("/affiliate", affiliatePartnerRoutes);
 app.use("/api/twilio", twilioRoutes);
 app.use("/api/upload", uploadRoutes);
+
+// Global error handler (fanger alle async fejl automatisk via express-async-errors)
+app.use((err, req, res, next) => {
+  console.error("❌ Server fejl:", err.message);
+  console.error(err.stack);
+  res.status(500).json({
+    error: "Der opstod en intern serverfejl",
+    message: process.env.NODE_ENV === "development" ? err.message : undefined,
+  });
+});
 
 // 404 fallback
 app.use((req, res) => {
