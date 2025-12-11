@@ -11,7 +11,7 @@ const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 (async () => {
   try {
     const payload = { sub: 'user:kunde', role: 'customer' };
-    const signOptions = { expiresIn: '1s', issuer: 'understory-marketplace' };
+    const signOptions = { expiresIn: '1d', issuer: 'understory-marketplace' };
 
     // opret token asynkront
     const token = await signAsync(payload, SECRET, signOptions);

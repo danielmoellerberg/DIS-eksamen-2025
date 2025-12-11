@@ -183,6 +183,47 @@
             </div>
         </div>
     </div>
+
+    <script>
+    const form = document.querySelector('.auth-form');
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const email = form.email.value;
+        const password = form.password.value;
+
+        try {
+        const res = await fetch('/affiliate/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json();
+
+        if (data.token) {
+            localStorage.setItem('jwtToken', data.token);
+            alert('Login succesfuldt!');
+            window.location.href = '/affiliate/dashboard';
+        } else if (data.error) {
+            alert('Login fejlede: ' + data.error);
+        }
+        } catch (err) {
+        console.error('Fejl ved login:', err);
+        alert('Der skete en fejl under login');
+        }
+    });
+
+    window.addEventListener('load', () => {
+        const token = localStorage.getItem('jwtToken');
+        if (token) {
+        console.log('Token fundet i localStorage:', token);
+        // her kan du redirecte til dashboard, hvis ønsket
+        }
+    });
+</script>
+
 </body>
 </html>
 

@@ -2,6 +2,8 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 const SECRET = process.env.SESSION_SECRET || 'understory-jwt-secret';
+const secretOrKey = SECRET;
+
 const payload = {
   sub: 'user:admin',
   name: 'Understory Admin',
@@ -9,9 +11,9 @@ const payload = {
 };
 
 // Signer token symmetrisk
-const token = jwt.sign(payload, SECRET, {
+const token = jwt.sign(payload, secretOrKey, {
   algorithm: 'HS256',
-  expiresIn: '1h',
+  expiresIn: '1d',
   issuer: 'understory-marketplace'
 });
 

@@ -1,4 +1,8 @@
 const adminModel = require("../models/adminModels");
+const jwt = require('jsonwebtoken');
+require('dotenv').config();
+const adminModel = require('../models/adminModel'); // juster stien hvis nødvendigt
+const SECRET = process.env.SESSION_SECRET || 'understory-jwt-secret';
 
 // Hent alle admin-brugere
 async function getAllAdmins(req, res) {
@@ -35,7 +39,7 @@ async function createAdmin(req, res) {
   }
 }
 
-// Login admin-bruger (password verificeres med bcrypt i modellen)
+// Login admin-bruger
 async function loginAdmin(req, res) {
   try {
     const { username, password } = req.body;
@@ -45,7 +49,7 @@ async function loginAdmin(req, res) {
     }
 
     // Password verificeres med bcrypt i adminModel.loginAdmin()
-    const admin = await adminModel.loginAdimage.pngmin(username, password);
+    const admin = await adminModel.loginAdmin(username, password); // rettet fra loginAdimage.pngmin
 
     // Gem admin i session
     req.session.admin = {
@@ -53,9 +57,23 @@ async function loginAdmin(req, res) {
       username: admin.username,
     };
 
+    // --- Tilføj JWT ---
+    const payload = {
+      sub: `user:${admin.id}`,
+      username: admin.username,
+      role: 'admin'
+    };
+
+    const token = jwt.sign(payload, SECRET, {
+      algorithm: 'HS256',
+      expiresIn: '1h',            // sæt efter behov
+      issuer: 'understory-marketplace'
+    });
+
     res.status(200).json({ 
       message: "Login succesfuldt", 
-      admin: { id: admin.id, username: admin.username }
+      admin: { id: admin.id, username: admin.username },
+      token // <-- JWT sendt til klienten
     });
   } catch (err) {
     res.status(401).json({ error: err.message });
