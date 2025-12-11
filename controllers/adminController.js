@@ -1,8 +1,8 @@
 const adminModel = require("../models/adminModels");
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
-const adminModel = require('../models/adminModel'); // juster stien hvis nødvendigt
-const SECRET = process.env.SESSION_SECRET || 'understory-jwt-secret';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'understory-jwt-secret';
 
 // Hent alle admin-brugere
 async function getAllAdmins(req, res) {
@@ -64,7 +64,7 @@ async function loginAdmin(req, res) {
       role: 'admin'
     };
 
-    const token = jwt.sign(payload, SECRET, {
+    const token = jwt.sign(payload, JWT_SECRET, {
       algorithm: 'HS256',
       expiresIn: '1h',            // sæt efter behov
       issuer: 'understory-marketplace'
