@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Stripe = require("stripe");
 const bookingModel = require("../models/bookingModels");
+const stripeWebhookController = require("../controllers/stripeWebhookController");
 
 // Initialiser Stripe med secret key fra environment variable
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -60,6 +61,15 @@ router.post("/create-checkout-session", async (req, res) => {
     res.status(500).json({ error: "Kunne ikke oprette betalingssession" });
   }
 });
+
+// Stripe webhook endpoint
+// VIGTIGT: Denne route skal bruge raw body (ikke parsed JSON)
+// Stripe kræver raw body for at verificere signature
+router.post(
+  "/webhook",
+  express.raw({ type: "application/json" }), // Raw body for webhook signature verification
+  stripeWebhookController.handleStripeWebhook
+);
 
 module.exports = router;
 

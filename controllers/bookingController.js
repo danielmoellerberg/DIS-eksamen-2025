@@ -385,6 +385,26 @@ async function getPaymentSuccess(req, res) {
     const sessionId = req.query.session_id;
     let booking = null;
     let errorMessage = null;
+    let paymentVerified = false;
+
+    // Hvis session_id er tilgængelig, verificer betalingen med Stripe API
+    if (sessionId && process.env.STRIPE_SECRET_KEY) {
+      try {
+        const Stripe = require("stripe");
+        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+        const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+        if (session.payment_status === "paid") {
+          paymentVerified = true;
+          console.log(`✅ Payment verified for session ${sessionId}`);
+        } else {
+          console.warn(`⚠️ Payment not paid for session ${sessionId}, status: ${session.payment_status}`);
+        }
+      } catch (stripeErr) {
+        console.error("Fejl ved Stripe session verificering:", stripeErr.message);
+        // Fortsæt med den eksisterende flow selvom verificering fejler
+      }
+    }
 
     if (bookingId) {
       try {
@@ -395,23 +415,36 @@ async function getPaymentSuccess(req, res) {
       }
 
       if (booking) {
-        try {
-          await bookingModel.updateBookingStatus(bookingId, "confirmed");
-        } catch (statusErr) {
-          console.error("Kunne ikke opdatere bookingstatus:", statusErr.message);
+        // Gem original status før opdatering (for at undgå duplicate emails)
+        const wasAlreadyConfirmed = booking.status === "confirmed";
+
+        // Opdater kun hvis booking ikke allerede er bekræftet (idempotency)
+        // Webhook kan allerede have opdateret den, så vi tjekker først
+        if (!wasAlreadyConfirmed) {
+          try {
+            await bookingModel.updateBookingStatus(bookingId, "confirmed");
+            console.log(`✅ Booking ${bookingId} opdateret til 'confirmed' via success page`);
+          } catch (statusErr) {
+            console.error("Kunne ikke opdatere bookingstatus:", statusErr.message);
+          }
+        } else {
+          console.log(`ℹ️ Booking ${bookingId} er allerede bekræftet (sandsynligvis via webhook)`);
         }
 
-        try {
-          await sendBookingConfirmationEmail({
-            email: booking.customer_email,
-            name: booking.customer_name,
-            eventTitle: booking.experience_title,
-            eventDate: booking.booking_date
-              ? new Date(booking.booking_date).toLocaleDateString("da-DK")
-              : undefined,
-          });
-        } catch (mailErr) {
-          console.error("Kunne ikke sende bookingbekræftelse:", mailErr.message);
+        // Send email kun hvis booking lige er blevet bekræftet (undgå duplicate emails)
+        if (!wasAlreadyConfirmed) {
+          try {
+            await sendBookingConfirmationEmail({
+              email: booking.customer_email,
+              name: booking.customer_name,
+              eventTitle: booking.experience_title,
+              eventDate: booking.booking_date
+                ? new Date(booking.booking_date).toLocaleDateString("da-DK")
+                : undefined,
+            });
+          } catch (mailErr) {
+            console.error("Kunne ikke sende bookingbekræftelse:", mailErr.message);
+          }
         }
       } else if (!errorMessage) {
         errorMessage = "Booking blev ikke fundet.";
