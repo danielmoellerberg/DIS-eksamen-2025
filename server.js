@@ -38,7 +38,23 @@ const limiter = rateLimit({
 
 // Middleware
 app.use(cors());
-app.use(helmet()); // HTTP header-sikkerhed (XSS, clickjacking, MIME-sniffing osv.)
+// Helmet med tilpasset Content Security Policy (tillader Cloudinary, Stripe, etc.)
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "https://js.stripe.com", "https://player.cloudinary.com"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        fontSrc: ["'self'", "https://fonts.gstatic.com"],
+        imgSrc: ["'self'", "data:", "https://res.cloudinary.com", "https://*.cloudinary.com", "https://picsum.photos", "https://*.picsum.photos"],
+        mediaSrc: ["'self'", "https://res.cloudinary.com", "https://*.cloudinary.com"],
+        frameSrc: ["'self'", "https://js.stripe.com", "https://player.cloudinary.com"],
+        connectSrc: ["'self'", "https://api.stripe.com"],
+      },
+    },
+  })
+);
 app.use(limiter); // Rate limiting (DoS-beskyttelse)
 app.use(morgan("dev")); // HTTP request logging
 app.use(responseTime((req, res, time) => {
