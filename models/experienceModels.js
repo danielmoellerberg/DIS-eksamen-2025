@@ -1,6 +1,6 @@
 const { poolConnect, pool, sql, ensureConnection } = require("../config/db");
 
-// Hent alle oplevelser
+// Henter alle oplevelser fra databasen uanset status eller partner
 async function getAllExperiences() {
   try {
     await ensureConnection();
@@ -11,7 +11,7 @@ async function getAllExperiences() {
   }
 }
 
-// Hent oplevelser for en specifik affiliate partner
+// Henter alle oplevelser for en specifik affiliate partner sorteret efter oprettelsesdato
 async function getExperiencesByPartnerId(partnerId) {
   try {
     await ensureConnection();
@@ -25,7 +25,7 @@ async function getExperiencesByPartnerId(partnerId) {
   }
 }
 
-// Hent en enkelt oplevelse
+// Henter en specifik oplevelse fra databasen baseret på ID
 async function getExperienceById(id) {
   try {
     await ensureConnection();
@@ -39,7 +39,7 @@ async function getExperienceById(id) {
   }
 }
 
-// Opret en ny oplevelse
+// Opretter en ny oplevelse i databasen med alle nødvendige felter og returnerer oprettet ID
 async function createExperience(data) {
   try {
     await ensureConnection();
@@ -74,7 +74,7 @@ async function createExperience(data) {
   }
 }
 
-// Opdater en oplevelse
+// Opdaterer en eksisterende oplevelse i databasen med nye data og opdaterer updated_at timestamp
 async function updateExperience(id, data) {
   try {
     await ensureConnection();
@@ -113,7 +113,7 @@ async function updateExperience(id, data) {
   }
 }
 
-// Slet en oplevelse
+// Sletter en oplevelse fra databasen baseret på ID
 async function deleteExperience(id) {
   try {
     await ensureConnection();

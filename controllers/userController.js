@@ -5,10 +5,16 @@ require('dotenv').config();
 
 const JWT_SECRET = process.env.JWT_SECRET || process.env.SESSION_SECRET || 'understory-jwt-secret';
 
-// Hent alle brugere
+// Henter alle brugere fra databasen og returnerer dem som JSON
+// async: Funktionen kan vente på asynkrone operationer (f.eks. database queries)
+// req: Request objekt - indeholder data fra klienten (headers, body, params, etc.)
+// res: Response objekt - bruges til at sende svar tilbage til klienten
 async function getAllUsers(req, res) {
   try {
+    // await: Vent på at database query er færdig før vi fortsætter
     const users = await userModel.getAllUsers();
+    // res.status(200): Sæt HTTP status kode til 200 (OK)
+    // res.json(): Send data som JSON til klienten
     res.status(200).json(users);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -18,8 +24,12 @@ async function getAllUsers(req, res) {
 // Opret en ny bruger (password hashes i modellen med bcrypt)
 async function createUser(req, res) {
   try {
+    // req.body: Indeholder data sendt fra klienten i request body (f.eks. fra form eller JSON)
+    // Destructuring: Henter name, email og password fra req.body
     const { name, email, password } = req.body;
 
+    // Validering: Tjek om påkrævede felter er udfyldt
+    // res.status(400): Bad Request - klienten har sendt ugyldig data
     if (!name || !email) {
       return res.status(400).json({ error: "Navn og email skal udfyldes" });
     }
@@ -30,13 +40,17 @@ async function createUser(req, res) {
     }
 
     // Password hashes automatisk i userModel.createUser() (hvis angivet)
+    // await: Vent på at database operation er færdig
     const result = await userModel.createUser({ name, email, password });
 
+    // res.status(201): Created - ny ressource er oprettet
     res.status(201).json({ 
       message: "Bruger oprettet", 
       user: { id: result.id, name: result.name, email: result.email }
     });
   } catch (err) {
+    // catch: Håndter fejl hvis noget går galt i try-blokken
+    // res.status(500): Internal Server Error - server fejl
     res.status(500).json({ error: err.message });
   }
 }
@@ -53,7 +67,8 @@ async function loginUser(req, res) {
     // Password verificeres med bcrypt i userModel.loginUser()
     const user = await userModel.loginUser(email, password);
 
-    // Gem bruger i session (for web-baserede komponenter)
+    // req.session: Session objekt - gemmer data mellem requests (brugeren forbliver logget ind)
+    // Session data gemmes i en cookie på klienten og serveren kan tilgå den ved hver request
     req.session.user = {
       id: user.id,
       name: user.name,
@@ -87,6 +102,8 @@ async function loginUser(req, res) {
 // Logout bruger
 async function logoutUser(req, res) {
   try {
+    // req.session.destroy(): Sletter session data (brugeren logges ud)
+    // Callback funktion: Køres når session er slettet (kan tage tid)
     req.session.destroy((err) => {
       if (err) {
         return res.status(500).json({ error: "Kunne ikke logge ud" });
@@ -98,12 +115,15 @@ async function logoutUser(req, res) {
   }
 }
 
-// Hent bruger ved ID
+// Henter en specifik bruger fra databasen baseret på ID og returnerer brugerdata
 async function getUserById(req, res) {
   try {
+    // req.params: Indeholder route parametre (f.eks. /users/:id -> req.params.id)
     const { id } = req.params;
+    // parseInt(): Konverterer string til integer (ID fra URL er altid string)
     const user = await userModel.getUserById(parseInt(id));
 
+    // res.status(404): Not Found - ressource eksisterer ikke
     if (!user) {
       return res.status(404).json({ error: "Bruger ikke fundet" });
     }

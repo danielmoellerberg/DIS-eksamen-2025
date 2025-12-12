@@ -60,7 +60,7 @@ const demoEventToTitle = {
   3: "Madlavningskursus"
 };
 
-// Hjælpefunktion til at finde database ID baseret på demoEvent ID eller titel
+// Finder database experience ID baseret på demo event ID ved at søge efter titel i databasen
 async function findDatabaseExperienceId(demoEventId) {
   try {
     const title = demoEventToTitle[demoEventId];
@@ -82,9 +82,14 @@ async function findDatabaseExperienceId(demoEventId) {
   }
 }
 
-// Vis booking-side
+// Renderer booking-siden for en specifik experience med tilgængelige datoer
+// res.render(): Renderer en EJS template (HTML side) med data og sender den til klienten
+// Forskellen mellem res.render() og res.json():
+// - res.render(): Til web-sider (HTML) - bruges til at vise sider til brugeren
+// - res.json(): Til API endpoints (JSON) - bruges til at sende data til apps/frontend
 async function getBookingPage(req, res) {
   try {
+    // req.params.id: Henter ID fra URL'en (f.eks. /book/123 -> id = "123")
     const experienceId = parseInt(req.params.id);
     
     if (!experienceId) {
@@ -134,9 +139,12 @@ async function getBookingPage(req, res) {
       experience.image_url = experience.image;
     }
     
+    // res.render(): Renderer EJS template "book.ejs" med data
+    // Første parameter: Navn på template fil (uden .ejs extension)
+    // Anden parameter: Objekt med data der sendes til template (tilgængelig som variabler i EJS)
     res.render("book", {
       title: `Book ${experience.title}`,
-      experience,
+      experience, // Kort notation for experience: experience
     });
   } catch (err) {
     console.error("Fejl ved hentning af booking-side:", err);
@@ -144,7 +152,7 @@ async function getBookingPage(req, res) {
   }
 }
 
-// Hent tilgængelige datoer (API endpoint)
+// Henter alle tilgængelige datoer for en specifik experience og returnerer dem som JSON
 async function getAvailableDates(req, res) {
   try {
     let experienceId = parseInt(req.params.id);
@@ -163,6 +171,8 @@ async function getAvailableDates(req, res) {
     
     const availableDates = await bookingModel.getAvailableDates(experienceId);
     
+    // res.json(): Sender data som JSON (JavaScript Object Notation)
+    // Bruges til API endpoints hvor frontend/apps forventer JSON data
     res.status(200).json({
       success: true,
       dates: availableDates
@@ -173,7 +183,7 @@ async function getAvailableDates(req, res) {
   }
 }
 
-// Opret booking (API endpoint)
+// Opretter en ny booking i databasen via API endpoint med validering af tilgængelighed
 async function createBooking(req, res) {
   try {
     const {
@@ -227,7 +237,7 @@ async function createBooking(req, res) {
   }
 }
 
-// Opret booking og redirect til betalingsside
+// Opretter en booking og redirecter brugeren til betalingssiden efter oprettelse
 async function createBookingAndRedirect(req, res) {
   try {
     const {
@@ -351,7 +361,7 @@ async function createBookingAndRedirect(req, res) {
   }
 }
 
-// Vis betalingsside
+// Renderer betalingssiden for en specifik booking med booking detaljer
 async function getPaymentPage(req, res) {
   try {
     const bookingId = parseInt(req.params.id);
@@ -378,7 +388,7 @@ async function getPaymentPage(req, res) {
   }
 }
 
-// Success side efter betaling
+// Renderer success-siden efter betaling, verificerer betaling med Stripe og opdaterer booking status
 async function getPaymentSuccess(req, res) {
   try {
     const bookingId = parseInt(req.query.booking_id);
@@ -463,7 +473,7 @@ async function getPaymentSuccess(req, res) {
   }
 }
 
-// Cancel side hvis betalingen annulleres
+// Renderer cancel-siden hvis brugeren annullerer betalingen under checkout processen
 async function getPaymentCancel(req, res) {
   try {
     const bookingId = parseInt(req.query.booking_id);

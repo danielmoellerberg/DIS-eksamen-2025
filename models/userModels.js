@@ -4,7 +4,7 @@ const { generatePasswordResetToken, verifyPasswordResetToken } = require("../uti
 
 const SALT_ROUNDS = 10; // Antal bcrypt salt rounds (10 er standard)
 
-// Hent alle brugere (uden passwords)
+// Henter alle brugere fra databasen uden password information
 async function getAllUsers() {
   try {
     await ensureConnection();
@@ -23,32 +23,47 @@ async function createUser(data) {
     await ensureConnection();
 
     // Tjek om email allerede eksisterer
+    // pool.request(): Opretter en ny database request
+    // .input(): Parameterized query - sikrer mod SQL injection angreb
+    // @email: Placeholder i SQL query (erstattes med værdi fra .input())
+    // Parameterized queries: Sikker måde at håndtere user input i SQL
     const existingUser = await pool
       .request()
-      .input("email", sql.NVarChar, data.email)
-      .query("SELECT id FROM Users WHERE email = @email");
+      .input("email", sql.NVarChar, data.email) // sql.NVarChar: SQL Server datatype (Unicode string)
+      .query("SELECT id FROM Users WHERE email = @email"); // @email = placeholder
 
+    // recordset: Array med resultater fra database query
+    // .length > 0: Tjekker om der er nogen resultater (email eksisterer allerede)
     if (existingUser.recordset.length > 0) {
+      // throw: Kaster en fejl - stopper funktionen og går til catch blok
       throw new Error("Email er allerede registreret");
     }
 
     // Hash password med bcrypt (hvis password er angivet)
+    // bcrypt: Krypteringsalgoritme til passwords - hasher password så det ikke kan dekrypteres
+    // SALT_ROUNDS: Antal gange password hashes (højere = mere sikkert men langsommere)
+    // Vi gemmer ALDRIG passwords i plaintext - altid hashet!
     let hashedPassword = null;
     if (data.password) {
+      // await bcrypt.hash(): Asynkron operation - hasher password
       hashedPassword = await bcrypt.hash(data.password, SALT_ROUNDS);
     }
 
+    // INSERT query: Indsætter ny række i Users tabellen
+    // SCOPE_IDENTITY(): SQL Server funktion der returnerer ID for den sidst indsatte række
     const result = await pool
       .request()
       .input("name", sql.NVarChar, data.name)
       .input("email", sql.NVarChar, data.email)
-      .input("password", sql.NVarChar, hashedPassword)
+      .input("password", sql.NVarChar, hashedPassword) // Gemmer hashet password, ikke plaintext!
       .query(`
         INSERT INTO Users (name, email, password) 
         VALUES (@name, @email, @password);
-        SELECT SCOPE_IDENTITY() as id;
+        SELECT SCOPE_IDENTITY() as id; -- Returnerer det nye ID
       `);
 
+    // result.recordset[0]: Første række fra query resultat
+    // Optional chaining (?.): Sikrer at koden ikke crasher hvis recordset er tom
     return {
       id: result.recordset[0]?.id,
       name: data.name,
@@ -81,7 +96,9 @@ async function loginUser(email, password) {
       throw new Error("Denne bruger har ikke et password. Kontakt support.");
     }
 
-    // Verificer password med bcrypt
+    // bcrypt.compare(): Sammenligner plaintext password med hashet password
+    // Returnerer true hvis de matcher, false hvis ikke
+    // bcrypt hasher automatisk det plaintext password og sammenligner med den gemte hash
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
@@ -100,7 +117,7 @@ async function loginUser(email, password) {
   }
 }
 
-// Hent bruger ved ID (uden password)
+// Henter en bruger fra databasen baseret på ID uden password information
 async function getUserById(id) {
   try {
     await ensureConnection();
@@ -116,7 +133,7 @@ async function getUserById(id) {
   }
 }
 
-// Hent bruger ved email (uden password)
+// Henter en bruger fra databasen baseret på email uden password information
 async function getUserByEmail(email) {
   try {
     await ensureConnection();

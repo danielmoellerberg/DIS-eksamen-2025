@@ -1,6 +1,6 @@
 const { poolConnect, pool, sql, ensureConnection } = require("../config/db");
 
-// Hent en oplevelse efter ID
+// Henter en specifik experience fra databasen baseret på ID
 async function getExperienceById(id) {
   try {
     // Sikr at forbindelsen er åben
@@ -16,7 +16,7 @@ async function getExperienceById(id) {
   }
 }
 
-// Tjek om en dato er tilgængelig (tjekker antal bookinger på den dato)
+// Tjekker om en specifik dato er tilgængelig for en experience ved at tælle eksisterende bookinger
 async function checkDateAvailability(experienceId, date) {
   try {
     // Sikr at forbindelsen er åben
@@ -48,7 +48,7 @@ async function checkDateAvailability(experienceId, date) {
   }
 }
 
-// Hent tilgængelige datoer for en oplevelse (fra i dag og 60 dage frem)
+// Henter alle tilgængelige datoer for en experience i de næste 60 dage med booking information
 async function getAvailableDates(experienceId) {
   try {
     // Sikr at forbindelsen er åben
@@ -132,7 +132,7 @@ async function getAvailableDates(experienceId) {
   }
 }
 
-// Opret en ny booking
+// Opretter en ny booking i databasen med alle booking detaljer og returnerer oprettet booking ID
 async function createBooking(bookingData) {
   try {
     // Sikr at forbindelsen er åben
@@ -178,7 +178,7 @@ async function createBooking(bookingData) {
   }
 }
 
-// Hent booking efter ID
+// Henter en specifik booking fra databasen baseret på ID inklusiv experience titel
 async function getBookingById(bookingId) {
   try {
     await ensureConnection();
@@ -198,6 +198,7 @@ async function getBookingById(bookingId) {
   }
 }
 
+// Opdaterer booking status i databasen for en specifik booking
 async function updateBookingStatus(bookingId, status) {
   try {
     await ensureConnection();
@@ -211,7 +212,7 @@ async function updateBookingStatus(bookingId, status) {
   }
 }
 
-// Hent bookinger der skal have SMS reminder (i morgen, ikke sendt endnu, confirmed)
+// Henter alle bookinger der skal have SMS reminder i morgen og ikke allerede har fået reminder
 async function getBookingsForReminder() {
   try {
     await ensureConnection();
@@ -238,7 +239,7 @@ async function getBookingsForReminder() {
   }
 }
 
-// Opdater reminder_sent til 1 (SMS er sendt)
+// Markerer at SMS reminder er sendt for en booking ved at opdatere reminder_sent flag
 async function updateReminderSent(bookingId) {
   try {
     await ensureConnection();
@@ -251,7 +252,7 @@ async function updateReminderSent(bookingId) {
   }
 }
 
-// Opdater reminder_response og reminder_response_date
+// Opdaterer reminder response (yes/no) og response dato for en booking når kunden svarer på SMS
 async function updateReminderResponse(bookingId, response) {
   try {
     await ensureConnection();
@@ -270,7 +271,7 @@ async function updateReminderResponse(bookingId, response) {
   }
 }
 
-// Find seneste aktive booking for et telefonnummer (status = 'confirmed')
+// Finder den seneste aktive booking for et telefonnummer med status confirmed
 async function findBookingByPhoneNumber(phoneNumber) {
   try {
     await ensureConnection();
@@ -295,7 +296,7 @@ async function findBookingByPhoneNumber(phoneNumber) {
   }
 }
 
-// Hent alle bookinger for en affiliate partners experiences
+// Henter alle bookinger for en affiliate partners experiences sorteret efter booking dato
 async function getBookingsByPartner(partnerId) {
   try {
     await ensureConnection();
@@ -320,7 +321,7 @@ async function getBookingsByPartner(partnerId) {
   }
 }
 
-// Hent statistikker for en affiliate partner
+// Henter statistikker for en affiliate partner inklusiv aktive experiences, total bookings og revenue
 async function getPartnerStatistics(partnerId) {
   try {
     await ensureConnection();

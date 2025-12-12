@@ -29,7 +29,7 @@ if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
   console.warn("⚠️ Twilio ikke fuldt konfigureret - tjek .env filen");
 }
 
-// Funktion til at normalisere telefonnummer (sikrer internationalt format)
+// Normaliserer telefonnummer til internationalt format (f.eks. "01234567" bliver til "+451234567")
 function normalizePhoneNumber(phone) {
   if (!phone) return null;
   

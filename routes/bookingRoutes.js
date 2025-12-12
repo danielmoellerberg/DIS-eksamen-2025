@@ -3,13 +3,19 @@ const router = express.Router();
 const bookingController = require("../controllers/bookingController");
 const { requireAuth } = require("../utils/authMiddleware");
 
-// Hent tilgængelige datoer for en oplevelse
+// ENDPOINT: GET /api/bookings/available/:id
+// Beskrivelse: Henter alle tilgængelige datoer for en specifik experience (næste 60 dage)
+// Beskyttet: Nej (offentlig - bruges af booking form)
 router.get("/available/:id", bookingController.getAvailableDates);
 
-// Opret en ny booking (API endpoint - beskyttet)
+// ENDPOINT: POST /api/bookings
+// Beskrivelse: Opretter en ny booking i databasen via API (returnerer JSON)
+// Beskyttet: Ja (kræver authentication)
 router.post("/", requireAuth, bookingController.createBooking);
 
-// Opret booking og redirect til betalingsside (form submit)
+// ENDPOINT: POST /api/bookings/create-and-redirect
+// Beskrivelse: Opretter en booking og redirecter brugeren til betalingssiden (web form submit)
+// Beskyttet: Nej (offentlig - bruges af booking form)
 router.post("/create-and-redirect", bookingController.createBookingAndRedirect);
 
 module.exports = router;

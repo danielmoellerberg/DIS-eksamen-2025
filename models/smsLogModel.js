@@ -1,6 +1,6 @@
 const { pool, sql, ensureConnection } = require("../config/db");
 
-// Opret SMS log entry
+// Opretter en SMS log entry i databasen med alle SMS detaljer inklusiv Twilio message SID
 async function createSmsLog(logData) {
   try {
     await ensureConnection();
@@ -31,7 +31,7 @@ async function createSmsLog(logData) {
   }
 }
 
-// Hent SMS logs for en booking
+// Henter alle SMS logs for en specifik booking sorteret efter oprettelsesdato
 async function getSmsLogsByBookingId(bookingId) {
   try {
     await ensureConnection();
@@ -51,7 +51,7 @@ async function getSmsLogsByBookingId(bookingId) {
   }
 }
 
-// Hent SMS logs for et telefonnummer
+// Henter alle SMS logs for et telefonnummer sorteret efter oprettelsesdato
 async function getSmsLogsByPhoneNumber(phoneNumber) {
   try {
     await ensureConnection();

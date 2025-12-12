@@ -3,12 +3,15 @@ const router = express.Router();
 const twilioWebhookController = require("../controllers/twilioWebhookController");
 const { twilioClient, twilioPhoneNumber, normalizePhoneNumber } = require("../config/twilio");
 
-// Webhook endpoint for indgående SMS fra Twilio
-// Twilio sender POST requests til denne endpoint når de modtager SMS
-// VIGTIGT: Denne route skal være før rate limiting middleware
+// ENDPOINT: POST /api/twilio/webhook
+// Beskrivelse: Modtager indgående SMS fra Twilio, parser kundens svar (X/Y) og opdaterer booking status
+// Beskyttet: Nej (webhook - Twilio sender requests hertil)
+// VIGTIGT: Skal være før rate limiting middleware
 router.post("/webhook", twilioWebhookController.handleIncomingSms);
 
-// Test endpoint - test om Twilio kan sende SMS
+// ENDPOINT: POST /api/twilio/test
+// Beskrivelse: Sender en test SMS via Twilio for at verificere Twilio konfiguration
+// Beskyttet: Nej (offentlig - kun til test)
 router.post("/test", async (req, res) => {
   try {
     const { phoneNumber, message } = req.body;

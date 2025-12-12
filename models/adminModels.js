@@ -3,7 +3,7 @@ const bcrypt = require("bcrypt");
 
 const SALT_ROUNDS = 10; // Antal bcrypt salt rounds (10 er standard)
 
-// Hent alle admin-brugere (uden passwords)
+// Henter alle admin-brugere fra databasen uden password information
 async function getAllAdmins() {
   try {
     await ensureConnection();
@@ -88,7 +88,7 @@ async function loginAdmin(username, password) {
   }
 }
 
-// Hent admin ved ID (uden password)
+// Henter en admin-bruger fra databasen baseret på ID uden password information
 async function getAdminById(id) {
   try {
     await ensureConnection();

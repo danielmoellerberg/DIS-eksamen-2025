@@ -7,9 +7,9 @@ const stripeWebhookController = require("../controllers/stripeWebhookController"
 // Initialiser Stripe med secret key fra environment variable
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-// Opret Stripe checkout session
-// NOTE: Offentlig endpoint - booking ID valideres i stedet for authentication
-// Dette er sikkert fordi booking allerede er oprettet og kun booking ID er nødvendigt
+// ENDPOINT: POST /api/payment/create-checkout-session
+// Beskrivelse: Opretter en Stripe checkout session for en booking og returnerer checkout URL
+// Beskyttet: Nej (offentlig - booking ID valideres i stedet)
 router.post("/create-checkout-session", async (req, res) => {
   try {
     const { bookingId } = req.body;
@@ -64,9 +64,10 @@ router.post("/create-checkout-session", async (req, res) => {
   }
 });
 
-// Stripe webhook endpoint
-// VIGTIGT: Denne route skal bruge raw body (ikke parsed JSON)
-// Stripe kræver raw body for at verificere signature
+// ENDPOINT: POST /api/payment/webhook
+// Beskrivelse: Modtager Stripe webhook events (betaling gennemført, refund, etc.) og opdaterer booking status
+// Beskyttet: Nej (webhook - Stripe verificerer signature)
+// VIGTIGT: Bruger raw body (ikke parsed JSON) for at Stripe kan verificere signature
 router.post(
   "/webhook",
   express.raw({ type: "application/json" }), // Raw body for webhook signature verification

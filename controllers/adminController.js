@@ -4,7 +4,7 @@ require('dotenv').config();
 
 const JWT_SECRET = process.env.JWT_SECRET || process.env.SESSION_SECRET || 'understory-jwt-secret';
 
-// Hent alle admin-brugere
+// Henter alle admin-brugere fra databasen og returnerer dem som JSON
 async function getAllAdmins(req, res) {
   try {
     const admins = await adminModel.getAllAdmins();
@@ -94,7 +94,7 @@ async function logoutAdmin(req, res) {
   }
 }
 
-// Hent admin ved ID
+// Henter en specifik admin-bruger fra databasen baseret på ID og returnerer admin data
 async function getAdminById(req, res) {
   try {
     const { id } = req.params;

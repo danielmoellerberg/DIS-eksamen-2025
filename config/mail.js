@@ -10,6 +10,7 @@ const sentFrom = new Sender(
   process.env.MAILERSEND_FROM_NAME || "Understory Marketplace"
 );
 
+// Sender booking bekræftelses email til kunden via MailerSend med booking detaljer
 async function sendBookingConfirmationEmail({ email, name, eventTitle, eventDate }) {
   if (!email) {
     throw new Error("Manglende e-mailadresse");

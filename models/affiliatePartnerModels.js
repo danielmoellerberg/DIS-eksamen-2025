@@ -1,7 +1,7 @@
 const { poolConnect, pool, sql, ensureConnection } = require("../config/db");
 const bcrypt = require("bcrypt");
 
-// Registrer en ny affiliate partner
+// Registrerer en ny affiliate partner i databasen med hashet password og validerer email unikhed
 async function registerAffiliatePartner(data) {
   try {
     await ensureConnection();
@@ -45,7 +45,7 @@ async function registerAffiliatePartner(data) {
   }
 }
 
-// Login for affiliate partner
+// Verificerer affiliate partner login ved at sammenligne password med bcrypt hash i databasen
 async function loginAffiliatePartner(email, password) {
   try {
     await ensureConnection();
@@ -82,7 +82,7 @@ async function loginAffiliatePartner(email, password) {
   }
 }
 
-// Hent affiliate partner ved ID
+// Henter en affiliate partner fra databasen baseret på ID uden password information
 async function getAffiliatePartnerById(id) {
   try {
     await ensureConnection();
@@ -98,7 +98,7 @@ async function getAffiliatePartnerById(id) {
   }
 }
 
-// Hent affiliate partner ved email
+// Henter en affiliate partner fra databasen baseret på email uden password information
 async function getAffiliatePartnerByEmail(email) {
   try {
     await ensureConnection();

@@ -17,6 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
     "Kreativitet": "Kreativitet"
   };
 
+  // Filtrerer events baseret på søgetekst og valgt kategori og viser/skjuler event cards
   function applyFilters() {
       const searchValue = searchInput ? searchInput.value.toLowerCase() : "";
 

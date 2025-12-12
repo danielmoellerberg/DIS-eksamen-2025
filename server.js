@@ -42,8 +42,11 @@ const limiter = rateLimit({
   }
 });
 
-// Middleware
-app.use(cors());
+// Middleware: Funktioner der kører før requests når deres route handlers
+// app.use(): Tilføjer middleware der kører for ALLE routes
+// Middleware kan: modificere req/res, logge, validere, autentificere, etc.
+// Middleware kører i rækkefølge - vigtigt at sætte dem i rigtig rækkefølge!
+app.use(cors()); // CORS: Tillader requests fra andre domæner (Cross-Origin Resource Sharing)
 // Helmet med tilpasset Content Security Policy
 // CSP beskytter mod XSS angreb ved at begrænse hvilke scripts og ressourcer der kan indlæses
 // Tillader Cloudinary, Stripe, etc. for funktionalitet, men begrænser ellers til 'self'
@@ -68,9 +71,12 @@ app.use(morgan("dev")); // HTTP request logging
 app.use(responseTime((req, res, time) => {
   console.log(`⏱️  ${req.method} ${req.originalUrl} - ${time.toFixed(2)}ms`);
 })); // Måler og logger serverresponstid
+// express.json(): Parser JSON data fra request body (f.eks. fra fetch/axios requests)
 app.use(express.json());
-app.use(express.urlencoded({ extended: true })); // For form data
-app.use(cookieParser()); // Parse cookies
+// express.urlencoded(): Parser form data fra HTML forms (extended: true tillader nested objects)
+app.use(express.urlencoded({ extended: true }));
+// cookieParser(): Parser cookies fra request headers og gør dem tilgængelige i req.cookies
+app.use(cookieParser());
 
 // Session middleware
 // Sikkerhedsforanstaltninger implementeret med fokus på modstandsdygtighed mod:
@@ -91,7 +97,7 @@ app.use(
   })
 );
 
-// HTTP request logging middleware (detaljeret logging)
+// Middleware der logger alle HTTP requests med method, URL og IP adresse
 app.use((req, res, next) => {
   console.log("----- HTTP Request -----");
   console.log("method:", req.method);
@@ -110,7 +116,7 @@ app.set("layout", "layout");
 // Statisk indhold
 app.use(express.static(path.join(__dirname, "public")));
 
-// Globale template-variabler
+// Middleware der tilføjer Cloudinary video URLs til alle views som globale variabler
 app.use((req, res, next) => {
   res.locals.heroVideoUrl = CLOUDINARY_VIDEO_URL;
   res.locals.heroVideoPoster = CLOUDINARY_VIDEO_POSTER;
@@ -118,9 +124,13 @@ app.use((req, res, next) => {
   next();
 });
 
-// Hent experiences fra database og format til frontend
+// Henter alle aktive experiences fra database og formaterer dem til frontend format
+// async function: Funktionen kan bruge await til at vente på asynkrone operationer
+// async/await: Gør asynkron kode mere læsbar end callbacks eller promises med .then()
 async function getExperiencesForFrontend() {
   try {
+    // await: Vent på at database query er færdig før vi fortsætter
+    // Uden await ville vi få en Promise i stedet for selve data
     const experiences = await experienceModel.getAllExperiences();
     
     // Filtrer kun aktive experiences
@@ -172,7 +182,9 @@ async function getExperiencesForFrontend() {
   }
 }
 
-// Forside (alias /home)
+// ENDPOINT: GET / eller GET /home
+// Beskrivelse: Viser forsiden med alle aktive experiences
+// Beskyttet: Nej (offentlig - forside)
 app.get(["/", "/home"], async (req, res) => {
   try {
     const events = await getExperiencesForFrontend();
@@ -183,7 +195,9 @@ app.get(["/", "/home"], async (req, res) => {
   }
 });
 
-// Details-side med anbefalinger
+// ENDPOINT: GET /details/:id
+// Beskrivelse: Viser detaljeside for en specifik experience med relaterede anbefalinger
+// Beskyttet: Nej (offentlig)
 app.get("/details/:id", async (req, res) => {
   try {
     const events = await getExperiencesForFrontend();
@@ -208,21 +222,36 @@ app.get("/details/:id", async (req, res) => {
   }
 });
 
-// Booking-side
+// ENDPOINT: GET /book/:id
+// Beskrivelse: Viser booking-siden for en specifik experience med tilgængelige datoer
+// Beskyttet: Nej (offentlig)
 const bookingController = require("./controllers/bookingController");
 app.get("/book/:id", bookingController.getBookingPage);
 
-// Betalingsside
+// ENDPOINT: GET /payment/success
+// Beskrivelse: Viser success-siden efter betaling, verificerer betaling med Stripe og opdaterer booking status
+// Beskyttet: Nej (offentlig - success callback fra Stripe)
 app.get("/payment/success", bookingController.getPaymentSuccess);
+
+// ENDPOINT: GET /payment/cancel
+// Beskrivelse: Viser cancel-siden hvis brugeren annullerer betalingen under checkout
+// Beskyttet: Nej (offentlig - cancel callback fra Stripe)
 app.get("/payment/cancel", bookingController.getPaymentCancel);
+
+// ENDPOINT: GET /payment/:id
+// Beskrivelse: Viser betalingssiden for en specifik booking med Stripe checkout
+// Beskyttet: Nej (offentlig)
 app.get("/payment/:id", bookingController.getPaymentPage);
 
-// Test-endpoint
+// ENDPOINT: GET /status
+// Beskrivelse: Test endpoint der returnerer server status (bruges til health checks)
+// Beskyttet: Nej (offentlig)
 app.get("/status", (req, res) => {
   res.send(`✅ Serveren kører på port ${PORT}`);
 });
 
-// Ruter
+// Ruter: Importerer route moduler (hver fil indeholder relaterede routes)
+// Dette gør koden mere organiseret - hver route fil håndterer et specifikt område
 const experiencesRoutes = require("./routes/experiencesRoutes");
 const userRoutes = require("./routes/userRoutes");
 const adminRoutes = require("./routes/adminRoutes");
@@ -233,6 +262,9 @@ const affiliatePartnerRoutes = require("./routes/affiliatePartnerRoutes");
 const twilioRoutes = require("./routes/twilioRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
 
+// app.use(): Mount router på en base path
+// Alle routes i experiencesRoutes vil nu være tilgængelige under /api/experiences
+// F.eks. router.get("/") i experiencesRoutes bliver til /api/experiences/
 app.use("/api/experiences", experiencesRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/admins", adminRoutes);
@@ -243,33 +275,48 @@ app.use("/affiliate", affiliatePartnerRoutes);
 app.use("/api/twilio", twilioRoutes);
 app.use("/api/upload", uploadRoutes);
 
-// Global error handler (fanger alle async fejl automatisk via express-async-errors)
+// Global error handler der fanger alle ubehandlede fejl og returnerer fejlbesked til klienten
+// Error handler middleware: Modtager 4 parametre (err, req, res, next)
+// Express identificerer automatisk error handlers ved antal parametre
+// Dette er den sidste middleware - fanger alle fejl der ikke er håndteret
 app.use((err, req, res, next) => {
+  // console.error(): Logger fejl til console (til debugging)
   console.error("❌ Server fejl:", err.message);
+  // err.stack: Stack trace - viser hvor fejlen opstod i koden
   console.error(err.stack);
+  // process.env.NODE_ENV: Environment variable (development/production)
+  // I development viser vi fejlbesked, i production skjuler vi den (sikkerhed)
   res.status(500).json({
     error: "Der opstod en intern serverfejl",
     message: process.env.NODE_ENV === "development" ? err.message : undefined,
   });
 });
 
-// 404 fallback
+// 404 handler der viser 404 side for alle routes der ikke matcher nogen route
+// Dette er den sidste route - hvis ingen route matcher, kører denne
+// Vigtigt: Placeres EFTER alle andre routes, ellers blokerer den alle routes!
 app.use((req, res) => {
   // Prøv først at rendere 404 view, hvis det findes
   try {
+    // res.status(404): Not Found - siden eksisterer ikke
+    // res.render(): Renderer 404.ejs template med data
     res.status(404).render("404", { title: "Siden blev ikke fundet" });
   } catch (err) {
     // Hvis 404 view ikke findes, send simpel tekst
+    // res.send(): Sender plaintext response (ikke JSON eller HTML template)
     res.status(404).send("404 - Siden blev ikke fundet");
   }
 });
 
 // Cron job: Send SMS reminders kl. 9:00 hver dag
+// Cron: Automatisk kørselsplan for opgaver (f.eks. daglige backups, emails, etc.)
 const { sendRemindersForTomorrow } = require("./controllers/notificationController");
 
 // Kør cron job hver dag kl. 9:00
+// cron.schedule(): Planlægger en funktion til at køre automatisk
 // Format: sekund minut time dag måned ugedag
-// '0 9 * * *' = kl. 9:00 hver dag
+// '0 9 * * *' = kl. 9:00 hver dag (0 sekunder, 9 minutter, * = alle dage/måneder)
+// async () => {}: Arrow function (kort notation for function) - kan bruge await
 cron.schedule("0 9 * * *", async () => {
   console.log("⏰ Cron job kører: Sender SMS reminders for i morgen...");
   try {
@@ -285,7 +332,7 @@ cron.schedule("0 9 * * *", async () => {
 
 console.log("⏰ Cron job opsat: SMS reminders sendes dagligt kl. 9:00 (dansk tid)");
 
-// Start server
+// Starter Express serveren på angivet port og host
 app.listen(PORT, HOST, () => {
   console.log(`✅ Serveren kører på http://${HOST}:${PORT}`);
 });

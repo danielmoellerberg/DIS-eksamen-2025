@@ -9,36 +9,19 @@
 
 const crypto = require("crypto");
 
-/**
- * Generer kryptografisk sikker tilfældig token
- * Bruges til: Password reset, email verification, API tokens
- * 
- * @param {number} length - Antal bytes (default: 32 = 64 hex chars)
- * @returns {string} - Token som hex string
- */
+// Genererer en kryptografisk sikker tilfældig token med angivet længde og returnerer den som hex string
 function generateToken(length = 32) {
   return crypto.randomBytes(length).toString("hex");
 }
 
-/**
- * Generer kort verification kode (6 cifre)
- * Bruges til: SMS verification, 2FA
- * 
- * @returns {string} - 6-cifret kode
- */
+// Genererer en 6-cifret verifikationskode til SMS verification eller 2FA
 function generateVerificationCode() {
   const buffer = crypto.randomBytes(4);
   const number = buffer.readUInt32BE(0) % 1000000;
   return number.toString().padStart(6, "0");
 }
 
-/**
- * Hash data med SHA-256
- * Bruges til: Data integritet, checksums
- * 
- * @param {string} data - Data der skal hashes
- * @returns {string} - Hash som hex string
- */
+// Hasher data med SHA-256 algoritme og returnerer hash som hex string til integritetskontrol
 function hashSHA256(data) {
   return crypto
     .createHash("sha256")
@@ -46,14 +29,7 @@ function hashSHA256(data) {
     .digest("hex");
 }
 
-/**
- * Generer HMAC signatur
- * Bruges til: API request signering, webhook validering
- * 
- * @param {string} data - Data der skal signeres
- * @param {string} secret - Hemmelig nøgle
- * @returns {string} - HMAC signatur som hex string
- */
+// Genererer HMAC-SHA256 signatur for data med hemmelig nøgle til webhook validering eller API signering
 function createHmacSignature(data, secret) {
   return crypto
     .createHmac("sha256", secret)
@@ -61,15 +37,7 @@ function createHmacSignature(data, secret) {
     .digest("hex");
 }
 
-/**
- * Verificer HMAC signatur (timing-safe)
- * Bruges til: Webhook validering (Twilio, Stripe)
- * 
- * @param {string} data - Original data
- * @param {string} signature - Modtaget signatur
- * @param {string} secret - Hemmelig nøgle
- * @returns {boolean} - true hvis signatur er gyldig
- */
+// Verificerer HMAC signatur med timing-safe comparison for at forhindre timing attacks ved webhook validering
 function verifyHmacSignature(data, signature, secret) {
   const expectedSignature = createHmacSignature(data, secret);
   
@@ -85,12 +53,7 @@ function verifyHmacSignature(data, signature, secret) {
   }
 }
 
-/**
- * Generer password reset token med udløbstid
- * 
- * @param {number} expiresInMs - Udløbstid i millisekunder (default: 1 time)
- * @returns {{token: string, hashedToken: string, expiresAt: Date}}
- */
+// Genererer password reset token med udløbstid og returnerer både rå token og hashed token til database
 function generatePasswordResetToken(expiresInMs = 3600000) {
   const token = generateToken(32);
   const hashedToken = hashSHA256(token); // Gem kun hash i database
@@ -103,14 +66,7 @@ function generatePasswordResetToken(expiresInMs = 3600000) {
   };
 }
 
-/**
- * Verificer password reset token
- * 
- * @param {string} token - Token fra bruger
- * @param {string} storedHash - Hash gemt i database
- * @param {Date} expiresAt - Udløbstidspunkt
- * @returns {{valid: boolean, reason?: string}}
- */
+// Verificerer password reset token ved at tjekke udløbstid og sammenligne hash med gemt hash i database
 function verifyPasswordResetToken(token, storedHash, expiresAt) {
   // Tjek om token er udløbet
   if (new Date() > new Date(expiresAt)) {
@@ -126,14 +82,7 @@ function verifyPasswordResetToken(token, storedHash, expiresAt) {
   return { valid: true };
 }
 
-/**
- * Krypter sensitiv data (AES-256-CBC)
- * Bruges til: Kryptering af følsomme data i database
- * 
- * @param {string} plaintext - Data der skal krypteres
- * @param {string} key - 32-byte nøgle (hex string)
- * @returns {string} - Krypteret data som "iv:encrypted"
- */
+// Krypterer sensitiv data med AES-256-CBC algoritme og returnerer krypteret data med IV som "iv:encrypted"
 function encryptData(plaintext, key) {
   const keyBuffer = Buffer.from(key, "hex");
   const iv = crypto.randomBytes(16);
@@ -145,13 +94,7 @@ function encryptData(plaintext, key) {
   return iv.toString("hex") + ":" + encrypted;
 }
 
-/**
- * Dekrypter sensitiv data (AES-256-CBC)
- * 
- * @param {string} encryptedData - Krypteret data som "iv:encrypted"
- * @param {string} key - 32-byte nøgle (hex string)
- * @returns {string} - Dekrypteret data
- */
+// Dekrypterer data der er krypteret med AES-256-CBC ved at ekstrahere IV og dekryptere med nøgle
 function decryptData(encryptedData, key) {
   const keyBuffer = Buffer.from(key, "hex");
   const [ivHex, encrypted] = encryptedData.split(":");
@@ -164,12 +107,7 @@ function decryptData(encryptedData, key) {
   return decrypted;
 }
 
-/**
- * Generer sikker session secret
- * Bruges til: express-session konfiguration
- * 
- * @returns {string} - 64-char hex string
- */
+// Genererer en sikker session secret som 64-char hex string til express-session konfiguration
 function generateSessionSecret() {
   return crypto.randomBytes(32).toString("hex");
 }

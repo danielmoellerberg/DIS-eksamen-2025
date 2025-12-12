@@ -2,7 +2,7 @@ const { twilioClient, twilioPhoneNumber, normalizePhoneNumber } = require("../co
 const { findBookingByPhoneNumber, updateReminderResponse, updateBookingStatus } = require("../models/bookingModels");
 const { createSmsLog } = require("../models/smsLogModel");
 
-// Håndter indgående SMS fra Twilio webhook
+// Håndterer indgående SMS fra Twilio webhook, parser svar (X/Y) og opdaterer booking status baseret på kundens svar
 async function handleIncomingSms(req, res) {
   try {
     // Debug: Log hele request body
@@ -114,7 +114,7 @@ async function handleIncomingSms(req, res) {
   }
 }
 
-// Hjælpefunktion til at formatere dato (27. december 2025)
+// Formaterer en dato til dansk format (f.eks. "27. december 2025")
 function formatDate(date) {
   if (!date) return "";
   

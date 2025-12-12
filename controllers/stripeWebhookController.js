@@ -8,10 +8,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 // Webhook secret fra environment variable (fås fra Stripe Dashboard)
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-/**
- * Håndter Stripe webhook events
- * Verificerer signature og opdaterer booking status automatisk
- */
+// Håndterer Stripe webhook events, verificerer signature og opdaterer booking status automatisk ved betaling
 async function handleStripeWebhook(req, res) {
   const sig = req.headers["stripe-signature"];
 
@@ -78,9 +75,7 @@ async function handleStripeWebhook(req, res) {
   }
 }
 
-/**
- * Håndter når checkout session er gennemført (betaling succesfuld)
- */
+// Håndterer når Stripe checkout session er gennemført, opdaterer booking til confirmed og sender bekræftelses email
 async function handleCheckoutSessionCompleted(session) {
   try {
     console.log("✅ Stripe webhook: Checkout session completed:", session.id);
@@ -138,9 +133,7 @@ async function handleCheckoutSessionCompleted(session) {
   }
 }
 
-/**
- * Håndter refund (hvis kunde får pengene tilbage)
- */
+// Håndterer refund events fra Stripe når kunde får pengene tilbage
 async function handleChargeRefunded(charge) {
   try {
     console.log("💰 Stripe webhook: Charge refunded:", charge.id);

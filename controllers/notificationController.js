@@ -3,11 +3,12 @@ const { sendBookingConfirmationEmail } = require("../config/mail");
 const { getBookingsForReminder, updateReminderSent } = require("../models/bookingModels");
 const { createSmsLog } = require("../models/smsLogModel");
 
-// Send e-mail notifikation (midlertidigt deaktiveret)
+// Send e-mail notifikation endpoint (midlertidigt deaktiveret - returnerer 503)
 async function sendEmailNotification(req, res) {
   res.status(503).json({ error: "Mail service ikke konfigureret endnu" });
 }
 
+// Sender booking bekræftelses email til kunden med booking detaljer
 async function sendBookingConfirmation(req, res) {
   const { email, name, eventTitle, eventDate } = req.body;
 
@@ -33,7 +34,7 @@ async function sendBookingConfirmation(req, res) {
   }
 }
 
-// Send SMS notifikation
+// Sender SMS notifikation via Twilio baseret på request body data
 async function sendSmsNotification(req, res) {
   const { to, message } = req.body;
 
@@ -53,7 +54,7 @@ async function sendSmsNotification(req, res) {
   }
 }
 
-// Send SMS reminder til en booking
+// Sender SMS reminder til en specifik booking via Twilio og logger det i databasen
 async function sendBookingReminderSms(booking) {
   try {
     if (!booking.customer_phone) {
@@ -115,7 +116,7 @@ async function sendBookingReminderSms(booking) {
   }
 }
 
-// Send reminders til alle bookinger der skal have dem (bruges af cron job)
+// Sender SMS reminders til alle bookinger der skal have reminder i morgen (køres af cron job)
 async function sendRemindersForTomorrow() {
   try {
     console.log("🔔 Starter reminder-proces for i morgen...");
@@ -160,7 +161,7 @@ async function sendRemindersForTomorrow() {
   }
 }
 
-// Test endpoint: Manuelt trigger reminder-proces
+// Test endpoint der manuelt trigger reminder-proces for at teste SMS reminder funktionalitet
 async function testSendReminders(req, res) {
   try {
     console.log("🧪 Test: Manuelt trigger af reminder-proces...");
@@ -186,7 +187,7 @@ async function testSendReminders(req, res) {
   }
 }
 
-// Hjælpefunktion til at formatere dato (27. december 2025)
+// Formaterer en dato til dansk format (f.eks. "27. december 2025")
 function formatDate(date) {
   if (!date) return "";
   

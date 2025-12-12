@@ -26,7 +26,9 @@ const upload = multer({
   }
 });
 
-// POST route til upload af experience billede
+// ENDPOINT: POST /api/upload/experience-image
+// Beskrivelse: Uploader et experience billede til Cloudinary, optimerer det og returnerer image URL
+// Beskyttet: Nej (offentlig - bruges af affiliate partner forms)
 router.post("/experience-image", upload.single("image"), async (req, res) => {
   try {
     // Tjek om der er en fil
@@ -87,7 +89,9 @@ router.post("/experience-image", upload.single("image"), async (req, res) => {
   }
 });
 
-// GET route som henter alle billeder fra projectdis/events mappen
+// ENDPOINT: GET /api/upload/experience-images
+// Beskrivelse: Henter alle uploadede experience billeder fra Cloudinary projectdis/events mappe
+// Beskyttet: Nej (offentlig)
 router.get("/experience-images", async (req, res) => {
   try {
     const result = await cloudinary.api.resources({

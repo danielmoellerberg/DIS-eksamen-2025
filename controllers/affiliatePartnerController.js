@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET || process.env.SESSION_SECRET || 'understory-jwt-secret';
 
-// Vis registrerings-siden
+// Renderer registrerings-siden for affiliate partners
 function getRegisterPage(req, res) {
   res.render("affiliateRegister", { 
     title: "Opret Affiliate Partner Konto",
@@ -26,7 +26,10 @@ async function register(req, res) {
       });
     }
     
-    // Email validering
+    // Email validering med regex (regular expression)
+    // Regex: Pattern matching til at tjekke om email har korrekt format
+    // /^[^\s@]+@[^\s@]+\.[^\s@]+$/: Tjekker for @ og . i email
+    // .test(): Returnerer true hvis email matcher pattern, false hvis ikke
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return res.render("affiliateRegister", {
@@ -52,9 +55,13 @@ async function register(req, res) {
     });
     
     // Log brugeren ind automatisk efter registrering
+    // req.session: Gemmer data i session (tilgængelig ved næste request)
     req.session.affiliatePartner = newPartner;
     
-    // Redirect til dashboard
+    // res.redirect(): Sender brugeren til en anden URL (HTTP redirect)
+    // Forskellen mellem res.redirect() og res.render():
+    // - res.redirect(): Sender brugeren til ny URL (browser navigerer)
+    // - res.render(): Viser en side uden at navigere væk
     res.redirect("/affiliate/dashboard");
   } catch (err) {
     res.render("affiliateRegister", {
@@ -64,7 +71,7 @@ async function register(req, res) {
   }
 }
 
-// Vis login-siden
+// Renderer login-siden for affiliate partners eller redirecter til dashboard hvis allerede logget ind
 function getLoginPage(req, res) {
   // Hvis allerede logget ind, redirect til dashboard
   if (req.session.affiliatePartner) {
@@ -138,7 +145,7 @@ async function login(req, res) {
   }
 }
 
-// Håndter logout
+// Håndterer logout ved at destruere session og redirecter til login side
 function logout(req, res) {
   req.session.destroy((err) => {
     if (err) {
@@ -148,7 +155,7 @@ function logout(req, res) {
   });
 }
 
-// Vis dashboard
+// Renderer affiliate partner dashboard med experiences, bookings og statistik
 async function getDashboard(req, res) {
   if (!req.session.affiliatePartner) {
     return res.redirect("/affiliate/login");
@@ -182,7 +189,7 @@ async function getDashboard(req, res) {
   }
 }
 
-// Vis liste over affiliate partners experiences (redirecter nu til dashboard)
+// Redirecter til dashboard da alle experiences nu vises der
 async function getExperiences(req, res) {
   if (!req.session.affiliatePartner) {
     return res.redirect("/affiliate/login");
@@ -192,7 +199,7 @@ async function getExperiences(req, res) {
   res.redirect("/affiliate/dashboard");
 }
 
-// Vis formular til at oprette ny experience
+// Renderer formularen til at oprette en ny experience for affiliate partner
 function getCreateExperiencePage(req, res) {
   if (!req.session.affiliatePartner) {
     return res.redirect("/affiliate/login");
@@ -205,7 +212,7 @@ function getCreateExperiencePage(req, res) {
   });
 }
 
-// Håndter oprettelse af ny experience
+// Håndterer oprettelse af ny experience fra affiliate partner med validering og redirect til dashboard
 async function createExperience(req, res) {
   if (!req.session.affiliatePartner) {
     return res.redirect("/affiliate/login");
@@ -274,7 +281,7 @@ async function createExperience(req, res) {
   }
 }
 
-// Vis edit experience page
+// Renderer edit-siden for en specifik experience med eksisterende data
 async function getEditExperiencePage(req, res) {
   if (!req.session.affiliatePartner) {
     return res.redirect("/affiliate/login");
@@ -300,7 +307,7 @@ async function getEditExperiencePage(req, res) {
   }
 }
 
-// Opdater en experience
+// Opdaterer en eksisterende experience i databasen med nye data og redirecter til dashboard
 async function updateExperience(req, res) {
   if (!req.session.affiliatePartner) {
     return res.redirect("/affiliate/login");
@@ -374,7 +381,7 @@ async function updateExperience(req, res) {
   }
 }
 
-// Slet en experience
+// Sletter en experience fra databasen efter at have verificeret at den tilhører partneren
 async function deleteExperience(req, res) {
   if (!req.session.affiliatePartner) {
     return res.redirect("/affiliate/login");

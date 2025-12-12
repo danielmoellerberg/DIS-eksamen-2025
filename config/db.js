@@ -20,7 +20,7 @@ const config = {
 
 const pool = new sql.ConnectionPool(config);
 
-// Funktion til at sikre forbindelsen er åben
+// Sikrer at database connection pool er åben og forbundet, opretter forbindelse hvis nødvendigt
 async function ensureConnection() {
   try {
     if (!pool.connected) {
