@@ -70,12 +70,21 @@ async function sendBookingReminderSms(booking) {
     // Opret SMS besked
     const message = `Hej ${booking.customer_name}! Du har booket ${booking.experience_title} den ${bookingDate}. Kommer du stadig? Svar X for ja, Y for nej. - Understory`;
     
+    // Valider Twilio konfiguration
+    if (!twilioPhoneNumber) {
+      throw new Error("TWILIO_PHONE_NUMBER ikke sat i .env filen");
+    }
+    
+    console.log(`📤 Sender SMS til ${normalizedPhone} fra ${twilioPhoneNumber}`);
+    
     // Send SMS via Twilio
     const twilioMessage = await twilioClient.messages.create({
       body: message,
       from: twilioPhoneNumber,
       to: normalizedPhone
     });
+    
+    console.log(`✅ SMS sendt - MessageSid: ${twilioMessage.sid}, Status: ${twilioMessage.status}`);
     
     // Log SMS i database
     await createSmsLog({

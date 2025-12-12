@@ -5,12 +5,21 @@ const { createSmsLog } = require("../models/smsLogModel");
 // Håndter indgående SMS fra Twilio webhook
 async function handleIncomingSms(req, res) {
   try {
-    // Twilio sender data i req.body
+    // Debug: Log hele request body
+    console.log("📥 Twilio webhook modtaget - Full body:", JSON.stringify(req.body, null, 2));
+    
+    // Twilio sender data i req.body (form-urlencoded)
     const from = req.body.From; // Telefonnummer der sender
     const body = req.body.Body ? req.body.Body.trim().toUpperCase() : ""; // SMS indhold
     const messageSid = req.body.MessageSid; // Twilio Message SID
     
-    console.log(`📱 Modtaget SMS fra ${from}: "${body}"`);
+    // Valider at vi har nødvendige data
+    if (!from) {
+      console.error("❌ Twilio webhook: Manglende 'From' i request body");
+      return res.status(400).send("Manglende From");
+    }
+    
+    console.log(`📱 Modtaget SMS fra ${from}: "${body}" (MessageSid: ${messageSid})`);
     
     // Normaliser telefonnummer
     const normalizedPhone = normalizePhoneNumber(from);
@@ -98,7 +107,9 @@ async function handleIncomingSms(req, res) {
     return res.status(200).send("OK"); // Twilio forventer 200 OK
   } catch (error) {
     console.error("❌ Fejl ved håndtering af indgående SMS:", error);
+    console.error("❌ Error stack:", error.stack);
     // Returner stadig 200 OK til Twilio for at undgå retries
+    // (Twilio vil ellers prøve igen flere gange)
     return res.status(200).send("OK");
   }
 }

@@ -34,6 +34,12 @@ const limiter = rateLimit({
   },
   standardHeaders: true, // Returnerer rate limit info i headers
   legacyHeaders: false, // Deaktiverer X-RateLimit-* headers
+  // Skip rate limiting for webhooks (Twilio, Stripe) og test endpoints
+  skip: (req) => {
+    return req.path.startsWith('/api/twilio/webhook') || 
+           req.path.startsWith('/api/twilio/test') ||
+           req.path.startsWith('/api/payment/webhook');
+  }
 });
 
 // Middleware
